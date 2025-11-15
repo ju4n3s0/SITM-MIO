@@ -1,7 +1,10 @@
 package ui;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -65,6 +68,9 @@ public class GraphViewer {
 
             System.out.println("Grafo cargado con " + graph.arcCount() + " arcos.");
 
+            // --- Imprimir en consola los arcos por ruta y orientación ---
+            printArcsByLine(graph);
+
         } catch (SQLException e) {
             e.printStackTrace();
             return;
@@ -82,5 +88,52 @@ public class GraphViewer {
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
+    }
+
+    
+    private static void printArcsByLine(RouteGraph graph) {
+        // Agrupar arcos por (lineId, orientación) en el orden en que se recorren
+        Map<String, List<Arc>> grupos = new LinkedHashMap<>();
+
+        for (Arc arc : graph.getArcs()) {
+            String key = arc.getLine().getId() + "|" + arc.getOrientation();
+            grupos.computeIfAbsent(key, k -> new ArrayList<>()).add(arc);
+        }
+
+        System.out.println();
+        System.out.println("========== LISTA DE ARCOS POR RUTA Y ORIENTACION ==========");
+
+        for (List<Arc> arcs : grupos.values()) {
+            if (arcs.isEmpty()) continue;
+
+            Line line = arcs.get(0).getLine();
+            String orientation = arcs.get(0).getOrientation();
+            String orientationLabel = orientationLabel(orientation);
+
+            System.out.println("---------------------------------------------------------");
+            System.out.printf("Linea %d (%s) - %s%n",
+                    line.getId(), line.getShortName(), orientationLabel);
+            System.out.println("Arcos (origen -> destino):");
+
+            for (Arc arc : arcs) {
+                Stop from = arc.getFrom();
+                Stop to = arc.getTo();
+
+                System.out.printf("  %d -> %d%n",
+                        from.getId(),
+                        to.getId());
+            }
+            System.out.println();
+        }
+
+        System.out.println("===========================================================");
+    }
+
+    private static String orientationLabel(String orientation) {
+        if (orientation == null) return "";
+        String o = orientation.trim().toUpperCase();
+        if (o.startsWith("I")) return "IDA";
+        if (o.startsWith("R")) return "REGRESO";
+        return o;
     }
 }
