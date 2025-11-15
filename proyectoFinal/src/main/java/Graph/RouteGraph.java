@@ -1,9 +1,12 @@
 package Graph;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import model.Arc;
 import model.Line;
 import model.Stop;
 
@@ -13,6 +16,8 @@ public class RouteGraph {
     private final Map<Long, Stop> stopsById = new HashMap<>();
     // Líneas
     private final Map<Long, Line> linesById = new HashMap<>();
+    // Arcos (conexiones entre paradas)
+    private final List<Arc> arcs = new ArrayList<>();
     
     // ======== STOPS ========
 
@@ -54,4 +59,17 @@ public class RouteGraph {
         return linesById.size();
     }
 
+    // ======== ARCS ========
+
+    public void addArc(Arc arc) {
+        arcs.add(arc);
+    }
+
+    public List<Arc> getArcs() {
+        return arcs;
+    }
+
+    public int arcCount() {
+        return arcs.size();
+    }
 }

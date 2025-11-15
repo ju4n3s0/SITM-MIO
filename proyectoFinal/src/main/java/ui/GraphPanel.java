@@ -8,6 +8,7 @@ import java.util.Collection;
 import javax.swing.JPanel;
 
 import Graph.RouteGraph;
+import model.Arc;
 import model.Stop;
 
 public class GraphPanel extends JPanel {
@@ -57,6 +58,22 @@ public class GraphPanel extends JPanel {
         int h = getHeight();
         int padding = 20;
 
+        // ==== 1. DIBUJAR ARCOS (LINEAS ENTRE PARADAS) ====
+        for (Arc arc : graph.getArcs()) {
+            Stop from = arc.getFrom();
+            Stop to   = arc.getTo();
+
+            if (from == null || to == null) continue;
+
+            int x1 = lonToX(from.getLongitude(), w, padding);
+            int y1 = latToY(from.getLatitude(), h, padding);
+            int x2 = lonToX(to.getLongitude(), w, padding);
+            int y2 = latToY(to.getLatitude(), h, padding);
+
+            g2.drawLine(x1, y1, x2, y2);
+        }
+
+        // ==== 2. DIBUJAR PARADAS (PUNTOS) COMO ANTES ====
         for (Stop s : graph.getStops()) {
             int x = lonToX(s.getLongitude(), w, padding);
             int y = latToY(s.getLatitude(), h, padding);

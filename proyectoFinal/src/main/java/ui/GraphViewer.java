@@ -7,11 +7,14 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import Graph.RouteGraph;
-import Repository.StopRepository;
 import Repository.LineRepository;
+import Repository.LineStopRepository;
+import Repository.StopRepository;
 import db.DatabaseManager;
-import model.Stop;
+import model.Arc;
 import model.Line;
+import model.LineStop;
+import model.Stop;
 
 public class GraphViewer {
 
@@ -20,22 +23,47 @@ public class GraphViewer {
         DatabaseManager dbManager = new DatabaseManager();
         StopRepository stopRepo = new StopRepository(dbManager);
         LineRepository lineRepo = new LineRepository(dbManager);
+        LineStopRepository lineStopRepo = new LineStopRepository(dbManager);
+
         RouteGraph graph = new RouteGraph();
 
         try {
-            // Cargar paradas
+            // --- Paradas ---
             List<Stop> stops = stopRepo.findAll();
             for (Stop s : stops) {
                 graph.addStop(s);
             }
             System.out.println("Grafo cargado con " + graph.stopCount() + " paradas.");
 
-            // Cargar líneas
+            // --- Líneas ---
             List<Line> lines = lineRepo.findAll();
             for (Line l : lines) {
                 graph.addLine(l);
             }
             System.out.println("Grafo cargado con " + graph.lineCount() + " lineas.");
+
+            // --- LineStops y Arcos ---
+            List<LineStop> lineStops = lineStopRepo.findAll();
+
+            LineStop prev = null;
+            for (LineStop current : lineStops) {
+                if (prev != null
+                        && prev.getLineId() == current.getLineId()
+                        && prev.getOrientation().equals(current.getOrientation())) {
+
+                    // Son consecutivos en la MISMA línea y la MISMA orientación
+                    Stop from = graph.getStop(prev.getStopId());
+                    Stop to = graph.getStop(current.getStopId());
+                    Line line = graph.getLine(current.getLineId());
+
+                    if (from != null && to != null && line != null) {
+                        graph.addArc(new Arc(from, to, line, current.getOrientation()));
+                    }
+                }
+                prev = current;
+            }
+
+            System.out.println("Grafo cargado con " + graph.arcCount() + " arcos.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -50,7 +78,7 @@ public class GraphViewer {
             GraphPanel panel = new GraphPanel(graph);
             frame.add(panel);
 
-            frame.setSize(800, 600);
+            frame.setSize(1000, 700);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
