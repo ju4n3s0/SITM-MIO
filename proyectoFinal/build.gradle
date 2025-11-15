@@ -22,5 +22,5 @@ test {
 
 // Por ahora usamos TestConnection como main
 application {
-    mainClass = 'db.TestConnection'
+    mainClass = 'Graph.RouteGraph'
 }
