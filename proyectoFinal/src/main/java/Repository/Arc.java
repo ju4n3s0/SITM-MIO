@@ -1,4 +1,7 @@
-package model;
+package Repository;
+
+import model.Line;
+import model.Stop;
 
 /**
  * Arco del grafo: conecta dos paradas consecutivas para una misma línea
@@ -11,11 +14,11 @@ public class Arc {
     private final Line line;
     private final String orientation; // para saber si es ida o vuelta
 
-    public Arc(Stop from, Stop to, Line line, String orientation) {
+    public Arc(Stop from, Line line, String orientation, Stop to) {
         this.from = from;
-        this.to = to;
         this.line = line;
         this.orientation = orientation;
+        this.to = to;
     }
 
     public Stop getFrom() {
@@ -33,4 +36,5 @@ public class Arc {
     public String getOrientation() {
         return orientation;
     }
+
 }

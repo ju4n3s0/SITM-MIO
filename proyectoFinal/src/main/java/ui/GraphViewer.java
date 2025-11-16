@@ -10,11 +10,11 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import Graph.RouteGraph;
+import Repository.Arc;
 import Repository.LineRepository;
 import Repository.LineStopRepository;
 import Repository.StopRepository;
 import db.DatabaseManager;
-import model.Arc;
 import model.Line;
 import model.LineStop;
 import model.Stop;
@@ -60,7 +60,7 @@ public class GraphViewer {
                     Line line = graph.getLine(current.getLineId());
 
                     if (from != null && to != null && line != null) {
-                        graph.addArc(new Arc(from, to, line, current.getOrientation()));
+                        graph.addArc(new Arc(from, line, current.getOrientation(), to));
                     }
                 }
                 prev = current;

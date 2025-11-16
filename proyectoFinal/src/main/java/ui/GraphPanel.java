@@ -8,7 +8,7 @@ import java.util.Collection;
 import javax.swing.JPanel;
 
 import Graph.RouteGraph;
-import model.Arc;
+import Repository.Arc;
 import model.Stop;
 
 public class GraphPanel extends JPanel {
