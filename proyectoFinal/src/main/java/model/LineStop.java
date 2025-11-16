@@ -5,14 +5,24 @@ public class LineStop {
 
     private final long lineId;
     private final long stopId;
-    private final int sequence;       
-    private final String orientation; 
+    private final int sequence;
+    private final int orientation;
+    private final int linevariant;
 
-    public LineStop(long lineId, long stopId, int sequence, String orientation) {
+    public LineStop(long lineId, long stopId, int sequence, int orientation, int linevariant) {
         this.lineId = lineId;
         this.stopId = stopId;
         this.sequence = sequence;
         this.orientation = orientation;
+        this.linevariant = linevariant;
+    }
+
+    public int getLinevariant() {
+        return linevariant;
+    }
+
+    public int setLinevariant(int linevariant) {
+        return this.linevariant;
     }
 
     public long getLineId() {
@@ -27,7 +37,7 @@ public class LineStop {
         return sequence;
     }
 
-    public String getOrientation() {
+    public int getOrientation() {
         return orientation;
     }
 
@@ -38,6 +48,7 @@ public class LineStop {
                 ", stopId=" + stopId +
                 ", sequence=" + sequence +
                 ", orientation='" + orientation + '\'' +
+                ", linevariant=" + linevariant +
                 '}';
     }
 }

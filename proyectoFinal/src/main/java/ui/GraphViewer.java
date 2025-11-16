@@ -2,6 +2,7 @@ package ui;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,10 @@ public class GraphViewer {
             for (LineStop current : lineStops) {
                 if (prev != null
                         && prev.getLineId() == current.getLineId()
-                        && prev.getOrientation().equals(current.getOrientation())) {
+                        && prev.getLinevariant() == current.getLinevariant()
+                        && prev.getOrientation() == current.getOrientation()
+                        && current.getSequence() == prev.getSequence() + 1
+                        ) {
 
                     // Son consecutivos en la MISMA línea y la MISMA orientación
                     Stop from = graph.getStop(prev.getStopId());
@@ -60,7 +64,14 @@ public class GraphViewer {
                     Line line = graph.getLine(current.getLineId());
 
                     if (from != null && to != null && line != null) {
-                        graph.addArc(new Arc(from, line, current.getOrientation(), to));
+                        graph.addArc(new Arc(
+                            from, 
+                            line, 
+                            current.getOrientation(),
+                            to,
+                            current.getLinevariant(),
+                            prev.getSequence()
+                            ));
                     }
                 }
                 prev = current;
@@ -106,13 +117,17 @@ public class GraphViewer {
         for (List<Arc> arcs : grupos.values()) {
             if (arcs.isEmpty()) continue;
 
+            arcs.sort(Comparator.comparingInt(Arc::getFromSequence));
+            
+            Arc firstArc = arcs.get(0);
             Line line = arcs.get(0).getLine();
-            String orientation = arcs.get(0).getOrientation();
+            int variant = firstArc.getLinevariant();
+            int orientation = arcs.get(0).getOrientation();
             String orientationLabel = orientationLabel(orientation);
 
             System.out.println("---------------------------------------------------------");
-            System.out.printf("Linea %d (%s) - %s%n",
-                    line.getId(), line.getShortName(), orientationLabel);
+            System.out.printf("Linea %d (%s) - Variante %d - %s%n",
+                    line.getId(), line.getShortName(), variant, orientationLabel);
             System.out.println("Arcos (origen -> destino):");
 
             for (Arc arc : arcs) {
@@ -129,11 +144,9 @@ public class GraphViewer {
         System.out.println("===========================================================");
     }
 
-    private static String orientationLabel(String orientation) {
-        if (orientation == null) return "";
-        String o = orientation.trim().toUpperCase();
-        if (o.startsWith("I")) return "IDA";
-        if (o.startsWith("R")) return "REGRESO";
-        return o;
+    private static String orientationLabel(int orientation) {
+        if (orientation == 0) return "IDA";
+        if (orientation == 1) return "REGRESO";
+        return String.valueOf(orientation);
     }
 }

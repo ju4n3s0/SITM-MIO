@@ -14,10 +14,10 @@ public class LineStopRepository {
 
     private final DatabaseManager dbManager;
 
-    private static final String BASE_QUERY =
-            "SELECT lineid, stopid, stopsequence, orientation " +
-            "FROM mio.linestops " +   
-            "ORDER BY lineid, orientation, stopsequence";
+    private static final String qry =
+            "SELECT lineid, linevariant, stopid, stopsequence, orientation " +
+            "FROM mio.linestops " +
+            "ORDER BY lineid, linevariant, orientation, stopsequence";
 
     public LineStopRepository(DatabaseManager dbManager) {
         this.dbManager = dbManager;
@@ -27,15 +27,16 @@ public class LineStopRepository {
         List<LineStop> result = new ArrayList<>();
 
         try (Connection conn = dbManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement(BASE_QUERY);
+             PreparedStatement ps = conn.prepareStatement(qry);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 long lineId = rs.getLong("lineid");
+                int linevariant = rs.getInt("linevariant");
                 long stopId = rs.getLong("stopid");
                 int sequence = rs.getInt("stopsequence");
-                String orientation = rs.getString("orientation");
-                result.add(new LineStop(lineId, stopId, sequence, orientation));
+                int orientation = rs.getInt("Orientation"); //0 or 1 
+                result.add(new LineStop(lineId, stopId, sequence, orientation,linevariant));
             }
         }
 
