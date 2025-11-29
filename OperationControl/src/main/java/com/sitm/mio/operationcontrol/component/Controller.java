@@ -62,77 +62,53 @@ public class Controller implements IController {
     
     @Override
     public AuthenticatedOperatorData login(String username, String password) {
-        // TODO: Implement login flow
-        // 1. Create credentials
-        // OperatorCredentials credentials = new OperatorCredentials(username, password);
-        // 
-        // 2. Authenticate via IProxyClient (POST)
-        // currentOperator = proxyClient.authenticate(credentials);
-        // 
-        // 3. Display authenticated operator via IVisualizacion
-        // visualization.displayAuthenticatedOperator(currentOperator);
-        // visualization.displayAssignedZones(currentOperator.getAssignedZones());
-        // 
-        // 4. Connect to WebSocket via IEventReceiver
-        // eventReceiver.connect(currentOperator.getToken());
-        // eventReceiver.subscribeToZones(currentOperator.getAssignedZones());
-        // 
-        // 5. Update UI connection status
-        // visualization.updateConnectionStatus(true);
+        OperatorCredentials credentials = new OperatorCredentials(username, password);
         
-        return null;
+        currentOperator = proxyClient.authenticate(credentials);
+        
+        visualization.displayAssignedZones(currentOperator.getAssignedZones());
+        
+        eventReceiver.connect(currentOperator.getToken());
+        eventReceiver.subscribeToZones(currentOperator.getAssignedZones());
+        
+        visualization.updateConnectionStatus(true);
+        
+        return currentOperator;
     }
     
     @Override
     public void logout() {
-        // TODO: Implement logout flow
-        // 1. Disconnect WebSocket via IEventReceiver
-        // eventReceiver.disconnect();
-        // 
-        // 2. Logout via IProxyClient (POST)
-        // proxyClient.logout();
-        // 
-        // 3. Clear state
-        // currentOperator = null;
-        // 
-        // 4. Update UI via IVisualizacion
-        // visualization.updateConnectionStatus(false);
+        eventReceiver.disconnect();
+        proxyClient.logout();
+        currentOperator = null;
+        
+        visualization.updateConnectionStatus(false);
     }
     
     @Override
     public ZoneStatisticsResponse queryZoneStatistics(String zoneId) {
-        // TODO: Implement zone query
-        // 1. Validate operator has access to zone
-        // if (!currentOperator.getAssignedZones().contains(zoneId)) {
-        //     visualization.displayAlert("No access to zone: " + zoneId);
-        //     return null;
-        // }
-        // 
-        // 2. Query via IProxyClient (GET)
-        // ZoneStatisticsResponse stats = proxyClient.getZoneStatistics(zoneId);
-        // 
-        // 3. Display via IVisualizacion
-        // visualization.displayZoneStatistics(stats);
-        // 
-        // return stats;
+        if (!currentOperator.getAssignedZones().contains(zoneId)) {
+            visualization.displayAlert("No access to zone: " + zoneId);
+            return null;
+        }
         
-        return null;
+        ZoneStatisticsResponse stats = proxyClient.getZoneStatistics(zoneId);
+        visualization.displayZoneStatistics(stats);
+        
+        return stats;
     }
     
     @Override
     public List<String> getAssignedZones() {
-        // TODO: Implement
-        // if (currentOperator != null) {
-        //     return currentOperator.getAssignedZones();
-        // }
+        if (currentOperator != null) {
+            return currentOperator.getAssignedZones();
+        }
         return null;
     }
     
     @Override
     public boolean isAuthenticated() {
-        // TODO: Implement
-        // return currentOperator != null && eventReceiver.isConnected();
-        return false;
+        return currentOperator != null && eventReceiver.isConnected();
     }
     
     @Override
@@ -150,20 +126,16 @@ public class Controller implements IController {
      * @param event Bus position event
      */
     public void handleBusPositionEvent(BusPositionUpdatedEvent event) {
-        // TODO: Implement event handling
-        // 1. Display event via IVisualizacion
-        // visualization.displayBusPosition(event);
-        // 
-        // 2. If speed is too low, send alert via IAlertSender
-        // if (event.getSpeed() < 10.0) {
-        //     alertSender.sendBusAlert(event.getBusId(), "LOW_SPEED", 
-        //         "Bus " + event.getBusId() + " moving slowly");
-        // }
-        // 
-        // 3. Delegate zone statistics update via ITaskDelegator
-        // if (taskDelegator.hasAvailableWorkers()) {
-        //     taskDelegator.delegateTask("UPDATE_ZONE_STATS", event.getZoneId());
-        // }
+        visualization.displayBusPosition(event);
+        
+        if (event.getSpeed() < 10.0) {
+            alertSender.sendBusAlert(event.getBusId(), "LOW_SPEED", 
+            "Bus " + event.getBusId() + " moving slowly");
+        }
+        
+        if (taskDelegator.hasAvailableWorkers()) {
+            taskDelegator.delegateTask("UPDATE_ZONE_STATS", event.getZoneId());
+        }
     }
     
     /**
@@ -174,18 +146,13 @@ public class Controller implements IController {
      * @param timeRange Time range for report
      */
     public void requestZoneReport(String zoneId, String timeRange) {
-        // TODO: Implement report request
-        // 1. Validate zone access
-        // if (!getAssignedZones().contains(zoneId)) {
-        //     visualization.displayAlert("No access to zone: " + zoneId);
-        //     return;
-        // }
-        // 
-        // 2. Request report via IReportSender
-        // String reportId = reportSender.sendZonePerformanceReport(zoneId, timeRange);
-        // 
-        // 3. Notify user via IVisualizacion
-        // visualization.displayAlert("Report " + reportId + " requested");
+        if (!getAssignedZones().contains(zoneId)) {
+            visualization.displayAlert("No access to zone: " + zoneId);
+            return;
+        }
+        
+        String reportId = reportSender.sendZonePerformanceReport(zoneId, timeRange);
+        visualization.displayAlert("Report " + reportId + " requested");
     }
     
     /**
@@ -196,18 +163,13 @@ public class Controller implements IController {
      * their zone-specific data.
      */
     public void viewSystemAnalytics() {
-        // TODO: Implement Observer integration
-        // 1. Check if Observer is available
-        // if (!analyticsClient.isObserverAvailable()) {
-        //     visualization.displayAlert("Observer system unavailable");
-        //     return;
-        // }
-        // 
-        // 2. Query system analytics from Observer
-        // Object systemAnalytics = analyticsClient.getSystemAnalytics();
-        // 
-        // 3. Display system-wide metrics via IVisualizacion
-        // visualization.displaySystemAnalytics(systemAnalytics);
+        if (!analyticsClient.isObserverAvailable()) {
+            visualization.displayAlert("Observer system unavailable");
+            return;
+        }
+        
+        Object systemAnalytics = analyticsClient.getSystemAnalytics();
+        visualization.displayAlert("System Analytics: " + systemAnalytics);
     }
     
     /**
@@ -218,17 +180,12 @@ public class Controller implements IController {
      * @param timeRange Time range (e.g., "1h", "24h", "7d")
      */
     public void viewZoneTrends(String zoneId, String timeRange) {
-        // TODO: Implement Observer integration
-        // 1. Validate zone access
-        // if (!getAssignedZones().contains(zoneId)) {
-        //     visualization.displayAlert("No access to zone: " + zoneId);
-        //     return;
-        // }
-        // 
-        // 2. Query historical trends from Observer
-        // Object trends = analyticsClient.getHistoricalTrends(timeRange);
-        // 
-        // 3. Display trends via IVisualizacion
-        // visualization.displayTrends(trends);
+        if (!getAssignedZones().contains(zoneId)) {
+            visualization.displayAlert("No access to zone: " + zoneId);
+            return;
+        }
+        
+        Object trends = analyticsClient.getHistoricalTrends(timeRange);
+        visualization.displayTrends(trends);
     }
 }
