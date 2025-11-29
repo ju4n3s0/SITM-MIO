@@ -42,4 +42,10 @@ public interface IVisualizacion {
      * @param connected Connection status
      */
     void updateConnectionStatus(boolean connected);
+    
+    /**
+     * Display historical trends for a zone.
+     * @param trends Trends data
+     */
+    void displayTrends(Object trends);
 }
