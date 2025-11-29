@@ -5,16 +5,18 @@ import com.sitm.mio.operationcontrol.model.BusPositionUpdatedEvent;
 import java.util.List;
 
 /**
- * WebSocket client for receiving real-time events from ProxyCache.
- * Connects to ProxyCache.SubscriptionManager via WebSocket.
+ * WebSocket client for receiving real-time events from Observer.
+ * Connects to Observer module via WebSocket for event streaming.
  * Component from deployment diagram: RecepcionDeEventos
  * 
  * Realizes: IEventReceiver
  * 
+ * Connection: OperationControl.EventReceiver → WebSocket → Observer
+ * 
  * WebSocket Flow:
  * 1. Connect with authentication token
  * 2. Send subscription message with assigned zones
- * 3. Receive real-time bus position events
+ * 3. Receive real-time bus position events from Observer
  * 4. Notify registered event handlers
  */
 public class EventReceiver implements IEventReceiver {

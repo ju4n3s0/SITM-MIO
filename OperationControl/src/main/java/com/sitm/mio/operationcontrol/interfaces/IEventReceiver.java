@@ -4,7 +4,9 @@ import java.util.List;
 
 /**
  * Interface for WebSocket event reception.
- * Defines the contract for receiving real-time events from ProxyCache.
+ * Defines the contract for receiving real-time events from Observer module.
+ * 
+ * Connection: OperationControl.EventReceiver → WebSocket → Observer
  * 
  * Realized by: EventReceiver
  */

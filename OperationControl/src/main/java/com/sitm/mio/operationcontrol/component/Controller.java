@@ -11,12 +11,13 @@ import java.util.List;
  * Realizes: IController
  * 
  * Uses (depends on interfaces):
- * - IProxyClient - REST API communication
- * - IEventReceiver - WebSocket event reception
+ * - IProxyClient - REST API communication with ProxyCache (authentication, zone queries)
+ * - IEventReceiver - WebSocket event streaming from Observer (real-time events)
  * - IVisualizacion - UI visualization updates
- * - ITaskDelegator - Calculation task delegation
+ * - ITaskDelegator - Calculation task delegation (Master-Slave pattern)
  * - IAlertSender - Alert notifications (optional)
  * - IReportSender - Report generation (optional)
+ * - IAnalyticsClient - Analytics queries from Observer module (REST API, port 8081)
  * 
  * Follows Dependency Inversion Principle:
  * Controller depends on abstractions (interfaces), not concrete implementations
@@ -32,6 +33,7 @@ public class Controller implements IController {
     // Optional dependencies (interfaces)
     private final IAlertSender alertSender;
     private final IReportSender reportSender;
+    private final IAnalyticsClient analyticsClient;
     
     // State
     private AuthenticatedOperatorData currentOperator;
@@ -46,7 +48,8 @@ public class Controller implements IController {
         IVisualizacion visualization,
         ITaskDelegator taskDelegator,
         IAlertSender alertSender,
-        IReportSender reportSender
+        IReportSender reportSender,
+        IAnalyticsClient analyticsClient
     ) {
         this.proxyClient = proxyClient;
         this.eventReceiver = eventReceiver;
@@ -54,6 +57,7 @@ public class Controller implements IController {
         this.taskDelegator = taskDelegator;
         this.alertSender = alertSender;
         this.reportSender = reportSender;
+        this.analyticsClient = analyticsClient;
     }
     
     @Override
@@ -182,5 +186,49 @@ public class Controller implements IController {
         // 
         // 3. Notify user via IVisualizacion
         // visualization.displayAlert("Report " + reportId + " requested");
+    }
+    
+    /**
+     * View system-wide analytics from Observer module.
+     * Demonstrates usage of IAnalyticsClient interface for inter-module communication.
+     * 
+     * This allows operators to see system-wide analytics in addition to
+     * their zone-specific data.
+     */
+    public void viewSystemAnalytics() {
+        // TODO: Implement Observer integration
+        // 1. Check if Observer is available
+        // if (!analyticsClient.isObserverAvailable()) {
+        //     visualization.displayAlert("Observer system unavailable");
+        //     return;
+        // }
+        // 
+        // 2. Query system analytics from Observer
+        // Object systemAnalytics = analyticsClient.getSystemAnalytics();
+        // 
+        // 3. Display system-wide metrics via IVisualizacion
+        // visualization.displaySystemAnalytics(systemAnalytics);
+    }
+    
+    /**
+     * View historical trends for a zone from Observer module.
+     * Demonstrates cross-module analytics integration.
+     * 
+     * @param zoneId Zone identifier
+     * @param timeRange Time range (e.g., "1h", "24h", "7d")
+     */
+    public void viewZoneTrends(String zoneId, String timeRange) {
+        // TODO: Implement Observer integration
+        // 1. Validate zone access
+        // if (!getAssignedZones().contains(zoneId)) {
+        //     visualization.displayAlert("No access to zone: " + zoneId);
+        //     return;
+        // }
+        // 
+        // 2. Query historical trends from Observer
+        // Object trends = analyticsClient.getHistoricalTrends(timeRange);
+        // 
+        // 3. Display trends via IVisualizacion
+        // visualization.displayTrends(trends);
     }
 }
