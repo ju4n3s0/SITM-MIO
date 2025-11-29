@@ -32,5 +32,5 @@ public interface IAlertSender {
      * @param alertType Type of alert
      * @param message Alert message
      */
-    void sendBusAlert(Integer busId, String alertType, String message);
+    void sendBusAlert(String busId, String alertType, String message);
 }
