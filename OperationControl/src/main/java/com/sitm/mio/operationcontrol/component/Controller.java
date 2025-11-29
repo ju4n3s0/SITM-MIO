@@ -1,5 +1,6 @@
 package com.sitm.mio.operationcontrol.component;
 
+import com.sitm.mio.operationcontrol.interfaces.IController;
 import com.sitm.mio.operationcontrol.model.*;
 import java.util.List;
 
@@ -7,13 +8,15 @@ import java.util.List;
  * Main business logic controller for the Operation Control System.
  * Component from deployment diagram: Controlador
  * 
+ * Realizes: IController
+ * 
  * Orchestrates:
  * - Authentication via ProxyClient (POST requests)
  * - Zone statistics queries via ProxyClient (GET requests)
  * - Real-time event subscription via EventReceiver (WebSocket)
  * - Event handling and business logic
  */
-public class Controller {
+public class Controller implements IController {
     
     private final ProxyClient proxyClient;
     private final EventReceiver eventReceiver;
@@ -24,12 +27,7 @@ public class Controller {
         this.eventReceiver = eventReceiver;
     }
     
-    /**
-     * Authenticate operator and initialize event subscriptions.
-     * @param username Operator username
-     * @param password Operator password
-     * @return Authenticated operator data
-     */
+    @Override
     public AuthenticatedOperatorData login(String username, String password) {
         // TODO: Implement login flow
         // 1. Call proxyClient.authenticate() (POST)
@@ -39,9 +37,7 @@ public class Controller {
         return null;
     }
     
-    /**
-     * Logout operator and disconnect from event stream.
-     */
+    @Override
     public void logout() {
         // TODO: Implement logout flow
         // 1. Disconnect WebSocket
@@ -49,11 +45,7 @@ public class Controller {
         // 3. Clear currentOperator
     }
     
-    /**
-     * Query zone statistics from DataCenter via ProxyCache.
-     * @param zoneId Zone identifier
-     * @return Zone statistics
-     */
+    @Override
     public ZoneStatisticsResponse queryZoneStatistics(String zoneId) {
         // TODO: Implement zone query (GET request)
         // 1. Validate operator has access to zone
@@ -61,25 +53,19 @@ public class Controller {
         return null;
     }
     
-    /**
-     * Get list of assigned zones for current operator.
-     */
+    @Override
     public List<String> getAssignedZones() {
         // TODO: Implement
         return null;
     }
     
-    /**
-     * Check if operator is authenticated.
-     */
+    @Override
     public boolean isAuthenticated() {
         // TODO: Implement
         return false;
     }
     
-    /**
-     * Get current operator data.
-     */
+    @Override
     public AuthenticatedOperatorData getCurrentOperator() {
         return currentOperator;
     }
