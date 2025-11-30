@@ -1,7 +1,0 @@
-Citizen/src/main/java/citizen/cache/ClienteCache.java
-Citizen/src/main/java/citizen/controller/CitizenController.java
-Citizen/src/main/java/citizen/dto/InformacionAlCiudadano.java
-Citizen/src/main/java/citizen/dto/ObtenerInformacionParaCiudadano.java
-Citizen/src/main/java/citizen/service/ServicioDetenerQuery.java
-Citizen/src/main/java/citizen/service/ServicioTiempoViaje.java
-Citizen/src/main/java/citizen/ui/UiCiudadano.java
