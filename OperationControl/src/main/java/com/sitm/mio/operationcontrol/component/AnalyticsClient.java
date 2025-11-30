@@ -1,6 +1,13 @@
 package com.sitm.mio.operationcontrol.component;
 
 import com.sitm.mio.operationcontrol.interfaces.IAnalyticsClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 
 /**
  * REST client for querying analytics from the Observer module.
@@ -26,6 +33,8 @@ import com.sitm.mio.operationcontrol.interfaces.IAnalyticsClient;
 public class AnalyticsClient implements IAnalyticsClient {
     
     private final String observerBaseUrl;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
     
     /**
      * Constructor.
@@ -33,6 +42,10 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     public AnalyticsClient(String observerBaseUrl) {
         this.observerBaseUrl = observerBaseUrl;
+        this.httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .build();
+        this.objectMapper = new ObjectMapper();
     }
     
     /**
@@ -47,13 +60,22 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public Object getSystemAnalytics() {
-        // TODO: Implement GET request to Observer
-        // String url = observerBaseUrl + "/analytics/system";
-        // HttpResponse<String> response = httpClient.send(
-        //     HttpRequest.newBuilder().uri(URI.create(url)).GET().build(),
-        //     HttpResponse.BodyHandlers.ofString()
-        // );
-        // return parseJson(response.body());
+        try {
+            String url = observerBaseUrl + "/analytics/system";
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(5))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), Object.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get system analytics: " + e.getMessage());
+        }
         return null;
     }
     
@@ -70,8 +92,22 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public Object getZoneAnalytics(String zoneId) {
-        // TODO: Implement GET request to Observer
-        // String url = observerBaseUrl + "/analytics/zone/" + zoneId;
+        try {
+            String url = observerBaseUrl + "/analytics/zone/" + zoneId;
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(5))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), Object.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get zone analytics: " + e.getMessage());
+        }
         return null;
     }
     
@@ -87,8 +123,22 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public Object getHistoricalTrends(String timeRange) {
-        // TODO: Implement GET request to Observer
-        // String url = observerBaseUrl + "/analytics/trends?timeRange=" + timeRange;
+        try {
+            String url = observerBaseUrl + "/analytics/trends?timeRange=" + timeRange;
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(5))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), Object.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get historical trends: " + e.getMessage());
+        }
         return null;
     }
     
@@ -105,8 +155,22 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public Object getArcAnalytics(String zoneId, Long arcId) {
-        // TODO: Implement GET request to Observer
-        // String url = observerBaseUrl + "/analytics/zone/" + zoneId + "/arc/" + arcId;
+        try {
+            String url = observerBaseUrl + "/analytics/zone/" + zoneId + "/arc/" + arcId;
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(5))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), Object.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get arc analytics: " + e.getMessage());
+        }
         return null;
     }
     
@@ -122,8 +186,22 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public Object getObserverPerformance() {
-        // TODO: Implement GET request to Observer
-        // String url = observerBaseUrl + "/analytics/performance";
+        try {
+            String url = observerBaseUrl + "/analytics/performance";
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(5))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), Object.class);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get observer performance: " + e.getMessage());
+        }
         return null;
     }
     
@@ -134,9 +212,18 @@ public class AnalyticsClient implements IAnalyticsClient {
      */
     @Override
     public boolean isObserverAvailable() {
-        // TODO: Implement health check
-        // Try to connect to observerBaseUrl
-        // Return true if successful, false otherwise
-        return false;
+        try {
+            String url = observerBaseUrl + "/analytics/health";
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .timeout(Duration.ofSeconds(3))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            return response.statusCode() == 200;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
