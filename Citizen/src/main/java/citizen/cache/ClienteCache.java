@@ -3,6 +3,8 @@ package citizen.cache;
 import java.util.HashMap;
 import java.util.Map;
 
+import proxyserver.service.RequestRouter;
+
 import citizen.dto.InformacionAlCiudadano;
 import citizen.dto.ObtenerInformacionParaCiudadano;
 import citizen.service.ServicioDetenerQuery;

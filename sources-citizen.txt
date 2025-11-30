@@ -5,5 +5,3 @@ Citizen/src/main/java/citizen/dto/ObtenerInformacionParaCiudadano.java
 Citizen/src/main/java/citizen/service/ServicioDetenerQuery.java
 Citizen/src/main/java/citizen/service/ServicioTiempoViaje.java
 Citizen/src/main/java/citizen/ui/UiCiudadano.java
-Citizen/src/main/java/proxyserver/service/IServicioCache.java
-Citizen/src/main/java/proxyserver/service/RequestRouter.java
