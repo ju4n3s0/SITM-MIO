@@ -39,6 +39,7 @@ public class Authenticator implements IAuthenticator {
         // 3. Fetch assigned zones
         // 4. Return { operatorId, username, assignedZones[] }
         System.out.println("[Authenticator] Authenticating operator: " + username);
+        System.out.println("[Authenticator] Password length: " + (password != null ? password.length() : "null"));
 
         try (Connection con = ManageDatabase.gConnection();
                 PreparedStatement ps = con.prepareStatement(SQL_FIND_OPERATOR)){
@@ -47,18 +48,25 @@ public class Authenticator implements IAuthenticator {
                     try (ResultSet rs = ps.executeQuery()){
                         //Validate if the user exist
                         if (!rs.next()) {
-                            System.out.println("[Authenticator] Operator not found");
+                            System.out.println("[Authenticator] Operator not found in database");
                             return null;
                         }
                         
                         long operatorId = rs.getLong("operator_id");
                         String storedHash = rs.getString("password_hash");
+                        
+                        System.out.println("[Authenticator] Found operator ID: " + operatorId);
+                        System.out.println("[Authenticator] Stored password: '" + storedHash + "'");
+                        System.out.println("[Authenticator] Provided password: '" + password + "'");
+                        System.out.println("[Authenticator] Passwords match: " + storedHash.equals(password));
 
                         //Validate the password
                         if (!storedHash.equals(password)) {
-                            System.out.println("[Authenticator] Invalid user or password.");
+                            System.out.println("[Authenticator] Password mismatch - authentication failed");
                             return null;
                         }
+                        
+                        System.out.println("[Authenticator] Password validated successfully");
 
                         //Obtain the zones of the operator
                         List<String> zones = loadAssignedZones(con, operatorId);
@@ -91,15 +99,21 @@ public class Authenticator implements IAuthenticator {
             try (ResultSet rs = ps.executeQuery()){
                 
                 while (rs.next()) { 
-                    zones.add(rs.getString("zone_id"));
+                    String zoneId = rs.getString("zone_id");
+                    zones.add(zoneId);
+                    System.out.println("[Authenticator] Loaded zone: '" + zoneId + "'");
                 }
+                
+                System.out.println("[Authenticator] Total zones loaded: " + zones.size());
 
             } catch (Exception e) {
-                System.out.println(e.getStackTrace());
+                System.err.println("[Authenticator] Error loading zones: " + e.getMessage());
+                e.printStackTrace();
             }
             
         } catch (Exception e) {
-            System.out.println(e.getStackTrace());
+            System.err.println("[Authenticator] Error preparing zone query: " + e.getMessage());
+            e.printStackTrace();
         }
         return zones;
     }
