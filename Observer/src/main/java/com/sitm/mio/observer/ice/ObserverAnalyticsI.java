@@ -5,7 +5,7 @@ import SITM.Analytics;
 import SITM.SystemStatistics;
 import SITM.ZoneStatistics;
 import SITM.HistoricalData;
-import com.sitm.mio.observer.component.ProxyClientICE;
+import com.sitm.mio.observer.component.ProxyClient;
 
 /**
  * ICE servant implementation for Observer's Analytics interface.
@@ -15,9 +15,9 @@ import com.sitm.mio.observer.component.ProxyClientICE;
  */
 public class ObserverAnalyticsI implements Analytics {
     
-    private final ProxyClientICE proxyClient;
+    private final ProxyClient proxyClient;
     
-    public ObserverAnalyticsI(ProxyClientICE proxyClient) {
+    public ObserverAnalyticsI(ProxyClient proxyClient) {
         this.proxyClient = proxyClient;
         System.out.println("ObserverAnalyticsI servant created");
     }
