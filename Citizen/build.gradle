@@ -6,14 +6,17 @@ plugins {
 group = 'com.sitm.mio'
 version = '1.0.0'
 sourceCompatibility = '17'
+targetCompatibility = '17'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // No external dependencies needed for basic functionality
-    // Add HTTP client when implementing actual network calls
+    // JSON processing (for HTTP communication)
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    
+    // HTTP client (for ProxyServer communication)
     // implementation 'com.squareup.okhttp3:okhttp:4.11.0'
     
     // Testing
