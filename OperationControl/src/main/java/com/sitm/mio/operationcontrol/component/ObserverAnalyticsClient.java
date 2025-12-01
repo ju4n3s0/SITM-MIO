@@ -12,12 +12,12 @@ import SITM.HistoricalData;
  * ICE RPC client for OperationControl to query Observer.
  * Connects to Observer's Analytics interface.
  */
-public class ObserverClientICE {
+public class ObserverAnalyticsClient {
     
     private final Communicator communicator;
     private final AnalyticsPrx analytics;
     
-    public ObserverClientICE(String host, int port) {
+    public ObserverAnalyticsClient(String host, int port) {
         String endpoint = String.format("tcp -h %s -p %d", host, port);
         
         System.out.println("ObserverClientICE initializing...");
