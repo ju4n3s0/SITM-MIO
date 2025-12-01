@@ -84,7 +84,21 @@ public class Main {
         IServiceDataCenter service = new ServiceDataCenter(facade, authenticator, arcZoneResolver);
 
         // 8. ICE Setup
-        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args)) {
+        // Load ICE configuration from file (or use command-line args)
+        com.zeroc.Ice.InitializationData initData = new com.zeroc.Ice.InitializationData();
+        initData.properties = com.zeroc.Ice.Util.createProperties();
+        
+        // Try to load config file, fallback to defaults if not found
+        try {
+            initData.properties.load("config.datacenter");
+            System.out.println("[ICE] Loaded configuration from config.datacenter");
+        } catch (Exception e) {
+            System.out.println("[ICE] Config file not found, using defaults");
+            // Fallback to hardcoded configuration
+            initData.properties.setProperty("DataCenterAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10003");
+        }
+        
+        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, initData)) {
             
             // Create ICE servants
             com.sitm.mio.datacenter.ice.DataCenterI dataCenterServant = 
@@ -96,9 +110,8 @@ public class Main {
             // Connect controller to ICE publisher
             controller.setIcePublisher(eventPublisher);
             
-            // Create object adapter
-            com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints(
-                "DataCenterAdapter", "default -p 10003");
+            // Create object adapter using configuration
+            com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapter("DataCenterAdapter");
             
             // Add servants to adapter
             adapter.add(dataCenterServant, com.zeroc.Ice.Util.stringToIdentity("DataCenter"));
