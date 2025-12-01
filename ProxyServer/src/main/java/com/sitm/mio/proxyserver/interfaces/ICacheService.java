@@ -1,7 +1,6 @@
 package com.sitm.mio.proxyserver.interfaces;
 
-import com.sitm.mio.proxyserver.dto.GetCitizenInformationRequest;
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
+import SITM.CitizenInformation;
 
 /**
  * Interface for cache service operations.
@@ -14,5 +13,5 @@ public interface ICacheService {
      * @param request The request containing origin and destination stop IDs
      * @return CitizenInformation with travel time details, or null if not available
      */
-    CitizenInformation getCitizenInformation(GetCitizenInformationRequest request);
+    CitizenInformation getCitizenInformation(long originId, long destinationId);
 }

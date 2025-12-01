@@ -11,7 +11,6 @@ public class EventStreamRouter {
         this.subscriptionManager = Objects.requireNonNull(subscriptionManager);
     }
 
-   
     public void publishEvent(Object event) {
         for (EventSubscriber subscriber : subscriptionManager.getSubscribers()) {
             try {

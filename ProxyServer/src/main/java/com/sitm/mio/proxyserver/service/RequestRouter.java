@@ -1,9 +1,7 @@
 package com.sitm.mio.proxyserver.service;
 
-import com.sitm.mio.proxyserver.dto.GetCitizenInformationRequest;
-import com.sitm.mio.proxyserver.interfaces.ICacheService;
+import SITM.CitizenInformation;
 import com.sitm.mio.proxyserver.interfaces.IDataCenterService;
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
 import com.sitm.mio.proxyserver.datacenter.DataCenterClient;
 import com.sitm.mio.proxyserver.cache.CacheManager;
 
@@ -11,7 +9,7 @@ import com.sitm.mio.proxyserver.cache.CacheManager;
  * Request router that handles requests from citizens.
  * Routes requests through cache and delegates to DataCenter when needed.
  */
-public class RequestRouter implements ICacheService {
+public class RequestRouter {
 
     private final CacheManager cacheManager;
     private final IDataCenterService dataCenter;
@@ -21,9 +19,8 @@ public class RequestRouter implements ICacheService {
         this.dataCenter = new DataCenterClient();
     }
 
-    @Override
-    public CitizenInformation getCitizenInformation(GetCitizenInformationRequest request) {
-        String key = request.getOriginId() + "-" + request.getDestinationId();
+    public CitizenInformation getCitizenInformation(long originId, long destinationId) {
+        String key = originId + "-" + destinationId;
         
         // Check cache first
         CitizenInformation info = cacheManager.get(key);
@@ -35,7 +32,7 @@ public class RequestRouter implements ICacheService {
         System.out.println("Cache MISS for key: " + key);
         
         // Query DataCenter (network call to remote service)
-        CitizenInformation dcInfo = dataCenter.getCitizenInformation(request);
+        CitizenInformation dcInfo = dataCenter.getCitizenInformation(originId, destinationId);
         
         if (dcInfo != null) {
             // Store in cache for future requests
@@ -43,5 +40,13 @@ public class RequestRouter implements ICacheService {
         }
         
         return dcInfo;
+    }
+    
+    /**
+     * Get the cache manager instance.
+     * Used by AnalyticsService to collect cache statistics.
+     */
+    public CacheManager getCacheManager() {
+        return cacheManager;
     }
 }

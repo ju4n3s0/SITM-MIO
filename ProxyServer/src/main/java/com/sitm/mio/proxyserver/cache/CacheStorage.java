@@ -27,4 +27,11 @@ public class CacheStorage implements ICacheStorage {
     public void remove(String key) {
         storage.remove(key);
     }
+    
+    /**
+     * Get the current number of entries in the cache.
+     */
+    public int size() {
+        return storage.size();
+    }
 }

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.zeroc.gradle.ice-builder.slice' version '1.5.0'
 }
 
 group = 'com.sitm.mio'
@@ -12,20 +13,10 @@ repositories {
 }
 
 dependencies {
-    // Spring Framework for REST client (if needed)
-    implementation 'org.springframework:spring-web:6.0.11'
-    implementation 'org.springframework:spring-context:6.0.11'
-    
-    // WebSocket client (Jakarta EE)
-    implementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
-    implementation 'org.glassfish.tyrus.bundles:tyrus-standalone-client:2.1.0'
-    
-    // HTTP client
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
-    
-    // JSON processing
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2'
+    // ZeroC Ice - RPC framework
+    // Add to both compileOnly and implementation to force it onto compile classpath
+    compileOnly 'com.zeroc:ice:3.7.10'
+    implementation 'com.zeroc:ice:3.7.10'
     
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.7'
@@ -34,6 +25,27 @@ dependencies {
     // Testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testImplementation 'org.mockito:mockito-core:5.3.1'
+}
+
+// ICE Slice compilation configuration
+slice {
+    java {
+        files = fileTree(dir: '../slice', include: '**/*.ice')
+    }
+}
+
+// Add generated sources to source sets for IDE recognition
+sourceSets {
+    main {
+        java {
+            srcDirs += file("${buildDir}/generated-src")
+        }
+    }
+}
+
+// Ensure compileJava depends on compileSlice
+tasks.named('compileJava') {
+    dependsOn tasks.named('compileSlice')
 }
 
 application {

@@ -1,23 +1,47 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.zeroc.gradle.ice-builder.slice' version '1.5.0'
 }
 
 group = 'com.sitm.mio'
 version = '1.0.0'
 sourceCompatibility = '17'
+targetCompatibility = '17'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    // No external dependencies needed for basic functionality
-    // Add HTTP client when implementing actual network calls
-    // implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    // ZeroC Ice - RPC framework
+    // Add to both compileOnly and implementation to force it onto compile classpath
+    compileOnly 'com.zeroc:ice:3.7.10'
+    implementation 'com.zeroc:ice:3.7.10'
     
     // Testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+}
+
+// ICE Slice compilation configuration
+slice {
+    java {
+        files = fileTree(dir: '../slice', include: '**/*.ice')
+    }
+}
+
+// Add generated sources to source sets for IDE recognition
+sourceSets {
+    main {
+        java {
+            srcDirs += file("${buildDir}/generated-src")
+        }
+    }
+}
+
+// Ensure compileJava depends on compileSlice
+tasks.named('compileJava') {
+    dependsOn tasks.named('compileSlice')
 }
 
 application {

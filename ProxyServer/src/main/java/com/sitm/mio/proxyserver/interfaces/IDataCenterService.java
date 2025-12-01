@@ -1,7 +1,6 @@
 package com.sitm.mio.proxyserver.interfaces;
 
-import com.sitm.mio.proxyserver.dto.GetCitizenInformationRequest;
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
+import SITM.CitizenInformation;
 
 /**
  * Interface for DataCenter service operations.
@@ -16,5 +15,5 @@ public interface IDataCenterService {
      * @param request The request with origin and destination IDs
      * @return CitizenInformation or null if not available
      */
-    CitizenInformation getCitizenInformation(GetCitizenInformationRequest request);
+    CitizenInformation getCitizenInformation(long originId, long destinationId);
 }

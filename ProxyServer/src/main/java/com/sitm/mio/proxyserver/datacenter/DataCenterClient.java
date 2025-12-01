@@ -1,8 +1,7 @@
 package com.sitm.mio.proxyserver.datacenter;
 
-import com.sitm.mio.proxyserver.dto.GetCitizenInformationRequest;
+import SITM.CitizenInformation;
 import com.sitm.mio.proxyserver.interfaces.IDataCenterService;
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
 import com.sitm.mio.proxyserver.config.ConfigLoader;
 
 /**
@@ -35,18 +34,20 @@ public class DataCenterClient implements IDataCenterService {
     }
     
     @Override
-    public CitizenInformation getCitizenInformation(GetCitizenInformationRequest request) {
+    public CitizenInformation getCitizenInformation(long originId, long destinationId) {
         // TODO: Implement actual HTTP call to DataCenter
         // For now, return a stub response
         
         System.out.println("DataCenterClient: Querying DataCenter at " + dataCenterUrl);
-        System.out.println("  Origin: " + request.getOriginId());
-        System.out.println("  Destination: " + request.getDestinationId());
+        System.out.println("  Origin: " + originId);
+        System.out.println("  Destination: " + destinationId);
         
         // Stub response - replace with actual HTTP call
-        String message = "Travel time from " + request.getOriginId() + 
-                        " to " + request.getDestinationId() + ": 25 minutes (estimated)";
+        String message = "Travel time from " + originId + 
+                        " to " + destinationId + ": 25 minutes (estimated)";
         
-        return new CitizenInformation(message);
+        var info = new CitizenInformation();
+        info.message = message;
+        return info;
     }
 }
