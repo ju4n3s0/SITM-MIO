@@ -2,13 +2,14 @@ package com.sitm.mio.observer;
 
 import com.zeroc.Ice.Communicator;
 import com.zeroc.Ice.ObjectAdapter;
+import com.zeroc.Ice.ObjectPrx;
 import com.zeroc.Ice.Util;
 import com.sitm.mio.observer.component.ProxyClientICE;
 import com.sitm.mio.observer.ice.ObserverAnalyticsI;
 import com.sitm.mio.observer.ice.EventPublisherI;
-import SITM.SystemStatistics;
-import SITM.Event;
-import SITM.EventType;
+import com.sitm.mio.observer.ice.ProxyServerEventSubscriberI;
+import SITM.EventPublisherPrx;
+import SITM.EventSubscriberPrx;
 
 /**
  * Main entry point for the Observer System (ICE version).
@@ -60,6 +61,7 @@ public class Main {
             // Create ICE servants
             ObserverAnalyticsI analyticsServant = new ObserverAnalyticsI(proxyClient);
             EventPublisherI eventPublisher = new EventPublisherI();
+            ProxyServerEventSubscriberI proxyServerSubscriber = new ProxyServerEventSubscriberI(eventPublisher);
             
             // Add servants to adapter
             adapter.add(analyticsServant, Util.stringToIdentity("Analytics"));
@@ -68,9 +70,28 @@ public class Main {
             adapter.add(eventPublisher, Util.stringToIdentity("EventPublisher"));
             System.out.println("EventPublisher servant registered");
             
+            ObjectPrx subscriberObj = adapter.add(proxyServerSubscriber, Util.stringToIdentity("ProxyServerSubscriber"));
+            System.out.println("ProxyServerSubscriber servant registered");
+            
             // Activate adapter
             adapter.activate();
             System.out.println("ObjectAdapter activated");
+            
+            System.out.println();
+            // Subscribe to ProxyServer's events
+            String proxyServerEndpoint = String.format("tcp -h %s -p %d", proxyHost, proxyPort);
+            ObjectPrx publisherBase = communicator.stringToProxy("EventPublisher:" + proxyServerEndpoint);
+            EventPublisherPrx proxyServerEventPublisher = EventPublisherPrx.checkedCast(publisherBase);
+            
+            String subscriptionId = null;
+            if (proxyServerEventPublisher != null) {
+                EventSubscriberPrx subscriberPrx = EventSubscriberPrx.uncheckedCast(subscriberObj);
+                subscriptionId = proxyServerEventPublisher.subscribe(subscriberPrx);
+                System.out.println("Subscribed to ProxyServer events");
+                System.out.println("  Subscription ID: " + subscriptionId);
+            } else {
+                System.err.println("Failed to connect to ProxyServer EventPublisher");
+            }
             
             System.out.println();
             System.out.println("========================================");
@@ -81,16 +102,32 @@ public class Main {
             System.out.println("  Analytics:tcp -h localhost -p " + observerPort);
             System.out.println("  EventPublisher:tcp -h localhost -p " + observerPort);
             System.out.println();
-            System.out.println("Monitoring ProxyServer and publishing events...");
+            System.out.println("Event Flow:");
+            System.out.println("  ProxyServer → Observer → OperationControl");
+            System.out.println();
+            System.out.println("Waiting for events from ProxyServer...");
             System.out.println("Press Ctrl+C to stop");
             System.out.println();
             
             // Add shutdown hook
+            final String finalSubscriptionId = subscriptionId;
+            final EventPublisherPrx finalProxyServerPublisher = proxyServerEventPublisher;
             final ProxyClientICE finalProxyClient = proxyClient;
             final Communicator finalCommunicator = communicator;
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println();
                 System.out.println("Shutting down Observer...");
+                
+                // Unsubscribe from ProxyServer
+                if (finalProxyServerPublisher != null && finalSubscriptionId != null) {
+                    try {
+                        finalProxyServerPublisher.unsubscribe(finalSubscriptionId);
+                        System.out.println("Unsubscribed from ProxyServer events");
+                    } catch (Exception e) {
+                        System.err.println("Error unsubscribing: " + e.getMessage());
+                    }
+                }
+                
                 if (finalProxyClient != null) {
                     finalProxyClient.shutdown();
                 }
@@ -100,31 +137,15 @@ public class Main {
                 System.out.println("Observer shutdown complete");
             }));
             
-            // Query analytics periodically and publish events to subscribers
-            while (true) {
-                if (proxyClient.isServerReachable()) {
-                    SystemStatistics stats = proxyClient.getSystemStatistics();
-                    if (stats != null) {
-                        System.out.println("ProxyServer Stats: " + stats.totalRequests + " requests, " +
-                                         String.format("%.2f%%", stats.cacheHitRate * 100) + " hit rate");
-                        
-                        // Create event and notify subscribers
-                        Event event = new Event();
-                        event.type = EventType.RequestProcessed;
-                        event.source = "Observer";
-                        event.message = "System stats updated: " + stats.totalRequests + " total requests";
-                        event.timestamp = System.currentTimeMillis();
-                        
-                        // Notify all subscribers (OperationControl)
-                        eventPublisher.notifySubscribers(event);
-                    }
-                }
-                
-                Thread.sleep(10000);
-            }
+
+
+            System.out.println("Observer is now waiting for events from ProxyServer...");
+            System.out.println();
             
-        } catch (InterruptedException e) {
-            System.out.println("Observer interrupted");
+            // TODO: Implement event listener from ProxyServer
+            // For now, just keep the server running
+            communicator.waitForShutdown();
+            
         } catch (Exception e) {
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
