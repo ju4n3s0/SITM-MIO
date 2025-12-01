@@ -44,8 +44,14 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     private JLabel assignedZonesLabel;
     private JLabel connectionStatusLabel;
     private JPanel statsPanel;
+    private com.sitm.mio.operationcontrol.component.ProxyClient proxyClient;
     
     public OperationControlUI() {
+        initializeUI();
+    }
+    
+    public OperationControlUI(com.sitm.mio.operationcontrol.component.ProxyClient proxyClient) {
+        this.proxyClient = proxyClient;
         initializeUI();
     }
     
@@ -219,8 +225,10 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
         SwingWorker<AuthenticatedOperatorData, Void> worker = new SwingWorker<>() {
             @Override
             protected AuthenticatedOperatorData doInBackground() {
-                if (controller != null) {
-                    return controller.login(username, password);
+                if (proxyClient != null) {
+                    com.sitm.mio.operationcontrol.model.OperatorCredentials credentials = 
+                        new com.sitm.mio.operationcontrol.model.OperatorCredentials(username, password);
+                    return proxyClient.authenticate(credentials);
                 }
                 return null;
             }
