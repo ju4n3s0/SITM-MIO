@@ -17,6 +17,9 @@ dependencies {
     compileOnly 'com.zeroc:ice:3.7.10'
     implementation 'com.zeroc:ice:3.7.10'
     
+    // PostgreSQL JDBC Driver
+    implementation 'org.postgresql:postgresql:42.6.0'
+    
     // WebSocket support
     implementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
     implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.15'
