@@ -4,10 +4,8 @@ import com.sitm.mio.proxyserver.interfaces.ICachePolicy;
 
 public class SimpleCachePolicy implements ICachePolicy {
 
-    
     private final long ttlMillis;
 
-    
     public SimpleCachePolicy(long ttlMillis) {
         this.ttlMillis = ttlMillis;
     }
