@@ -57,11 +57,12 @@ public class ServiceDataCenter implements IServiceDataCenter {
     @Override
     public List<DatagramHistoryRecord> getZoneDatagrams(String token, String zoneId, String timeRange) {
 
+        OperatorAuthResult session = authenticator.findSessionByToken(token);
         if (!authenticator.validateToken(token)) {
             throw new IllegalArgumentException("Invalid token");
         }
 
-        @SuppressWarnings("Unchecked")
+        @SuppressWarnings("unchecked")
         List<DatagramHistoryRecord> all = (List<DatagramHistoryRecord>) facade.getHistoricalData(timeRange);
 
         List<DatagramHistoryRecord> filtered = new ArrayList<>();

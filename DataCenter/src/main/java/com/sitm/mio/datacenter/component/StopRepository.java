@@ -128,7 +128,6 @@ public class StopRepository implements IStopRepository {
     public void delete(Long stopId) {
         try(Connection con = ManageDatabase.gConnection()){
             PreparedStatement ps = con.prepareStatement(SQL_DELETE);
-
             ps.setLong(1, stopId);
             ps.executeUpdate();
         } catch (Exception e) {

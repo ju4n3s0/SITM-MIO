@@ -107,8 +107,8 @@ public class ReceptorDatagramas implements IDatagramReceiver {
         long gps_x = rs.getLong("gps_x");
         long gps_y = rs.getLong("gps_y");
 
-        double latitude = gps_x / 1e7;
-        double longitude = gps_y / 1e7;
+        double latitude = gps_y / 1e7;
+        double longitude = gps_x / 1e7;
 
         java.sql.Timestamp ts = rs.getTimestamp("event_ts");
         Instant eventTs = (ts != null) ? ts.toInstant() : Instant.EPOCH;

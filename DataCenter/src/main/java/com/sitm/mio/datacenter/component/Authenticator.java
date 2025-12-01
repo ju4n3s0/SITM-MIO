@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.sitm.mio.datacenter.config.ManageDatabase;
 import com.sitm.mio.datacenter.interfaces.IAuthenticator;
@@ -18,6 +20,9 @@ import com.sitm.mio.datacenter.model.OperatorAuthResult;
  * Realizes: IAuthenticator
  */
 public class Authenticator implements IAuthenticator {
+    
+    private final Map<String, OperatorAuthResult> sessions = 
+        new ConcurrentHashMap<>();
 
     private static final String SQL_FIND_OPERATOR =
             "SELECT operator_id, username, password_hash " +
@@ -62,7 +67,11 @@ public class Authenticator implements IAuthenticator {
                         String token = UUID.randomUUID().toString();
 
                         //Return the DTO
-                        return new OperatorAuthResult(operatorId, username, zones, token);
+                        OperatorAuthResult session = new OperatorAuthResult(operatorId, username, zones, token);
+                        
+                        //Save on the map
+                        sessions.put(token, session);
+                        return session;
 
                     } catch (Exception e) {
                         throw new RuntimeException("Error authenticating" , e);
@@ -105,6 +114,17 @@ public class Authenticator implements IAuthenticator {
     
     @Override
     public boolean validateToken(String token) {
-        return token != null && !token.isBlank();
+
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+
+        return sessions.containsKey(token);
+    }
+
+    @Override
+    public OperatorAuthResult findSessionByToken(String token) {
+        if (token == null) return null;
+        return sessions.get(token);
     }
 }
