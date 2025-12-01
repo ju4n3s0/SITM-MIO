@@ -68,8 +68,8 @@ public class Main {
         IDatagramReceiver datagramReceiver = new ReceptorDatagramas(eventBus);
         datagramReceiver.start();
 
-        // 5. Controller suscrito a eventos
-        IController controller = new Controller(eventBus, arcZoneResolver);
+        // 5. Controller suscrito a eventos (with Facade for data access)
+        IController controller = new Controller(eventBus, arcZoneResolver, facade);
         // Suscribimos el controller a eventos EventNewDatagram:
         eventBus.subscribe(
             EventNewDatagram.class,
@@ -83,7 +83,42 @@ public class Main {
         // 7. Servicio “remoto” (ServiceDataCenter) – por ahora local
         IServiceDataCenter service = new ServiceDataCenter(facade, authenticator, arcZoneResolver);
 
-        System.out.println("DataCenter running (simulado, sin ICE aún)");
+        // 8. ICE Setup
+        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args)) {
+            
+            // Create ICE servants
+            com.sitm.mio.datacenter.ice.DataCenterI dataCenterServant = 
+                new com.sitm.mio.datacenter.ice.DataCenterI(facade);
+            
+            com.sitm.mio.datacenter.ice.DataCenterEventPublisherI eventPublisher = 
+                new com.sitm.mio.datacenter.ice.DataCenterEventPublisherI();
+            
+            // Connect controller to ICE publisher
+            controller.setIcePublisher(eventPublisher);
+            
+            // Create object adapter
+            com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapterWithEndpoints(
+                "DataCenterAdapter", "default -p 10003");
+            
+            // Add servants to adapter
+            adapter.add(dataCenterServant, com.zeroc.Ice.Util.stringToIdentity("DataCenter"));
+            adapter.add(eventPublisher, com.zeroc.Ice.Util.stringToIdentity("DataCenterEventPublisher"));
+            
+            // Activate adapter
+            adapter.activate();
+            
+            System.out.println("=".repeat(60));
+            System.out.println("DataCenter ICE Server Started");
+            System.out.println("=".repeat(60));
+            System.out.println("ICE Port: 10003");
+            System.out.println("DataCenter Service: DataCenter:default -p 10003");
+            System.out.println("Event Publisher: DataCenterEventPublisher:default -p 10003");
+            System.out.println("Active subscribers: " + eventPublisher.getSubscriberCount());
+            System.out.println("=".repeat(60));
+            
+            // Wait for shutdown
+            communicator.waitForShutdown();
+        }
     }
 
 }
