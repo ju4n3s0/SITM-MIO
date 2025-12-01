@@ -4,10 +4,10 @@ import com.sitm.mio.datacenter.component.ArcZoneResolver;
 import com.sitm.mio.datacenter.component.Authenticator;
 import com.sitm.mio.datacenter.component.Controller;
 import com.sitm.mio.datacenter.component.DataCenterFacade;
+import com.sitm.mio.datacenter.component.DatagramReceiver;
 import com.sitm.mio.datacenter.component.EventBus;
 import com.sitm.mio.datacenter.component.LineRepository;
 import com.sitm.mio.datacenter.component.MonitoringConsole;
-import com.sitm.mio.datacenter.component.ReceptorDatagramas;
 import com.sitm.mio.datacenter.component.ServiceDataCenter;
 import com.sitm.mio.datacenter.component.StopRepository;
 import com.sitm.mio.datacenter.component.TravelTimeStatsRepository;
@@ -47,6 +47,16 @@ public class Main {
     
     public static void main(String[] args) {
         System.out.println("DataCenter starting...");
+        
+        // 0. Test database connection
+        System.out.println("\n=== Testing Database Connection ===");
+        boolean dbConnected = com.sitm.mio.datacenter.config.ManageDatabase.testConnection();
+        if (!dbConnected) {
+            System.err.println("    WARNING: Database connection failed!");
+            System.err.println("    Check config.properties for correct database settings");
+            System.err.println("    DataCenter will continue but database operations will fail\n");
+        }
+        System.out.println("===================================\n");
 
         // 1. Repositorios
         IStopRepository stopRepo = new StopRepository();
@@ -64,9 +74,30 @@ public class Main {
         IEventBus eventBus = new EventBus();
         eventBus.start();
 
-        // 4. Receptor de datagramas
-        IDatagramReceiver datagramReceiver = new ReceptorDatagramas(eventBus);
-        datagramReceiver.start();
+        // 4. Datagram source (Strategy Pattern)
+        String sourceType = com.sitm.mio.datacenter.config.ConfigLoader.getDatagramSource();
+        com.sitm.mio.datacenter.interfaces.IDatagramSource datagramSource;
+        
+        if ("UDP".equals(sourceType)) {
+            // Real-time mode: Listen to UDP datagrams
+            int udpPort = com.sitm.mio.datacenter.config.ConfigLoader.getUdpReceiverPort();
+            datagramSource = new com.sitm.mio.datacenter.component.UDPDatagramSource(eventBus, udpPort);
+            System.out.println("=== REAL-TIME MODE: UDP Datagram Source ===");
+            System.out.println("Listening on UDP port: " + udpPort);
+        } else {
+            // Historic mode: Poll database
+            long pollInterval = com.sitm.mio.datacenter.config.ConfigLoader.getDatabasePollInterval();
+            datagramSource = new com.sitm.mio.datacenter.component.DatabaseDatagramSource(eventBus, pollInterval);
+            System.out.println("=== HISTORIC MODE: Database Datagram Source ===");
+            System.out.println("Polling interval: " + pollInterval + "ms");
+        }
+        
+        datagramSource.start();
+        System.out.println("Datagram source started: " + datagramSource.getSourceType());
+        
+        // Keep reference as IDatagramReceiver for compatibility
+        IDatagramReceiver datagramReceiver = new DatagramReceiver(eventBus);
+        // Note: datagramReceiver is kept for MonitoringConsole compatibility but not started
 
         // 5. Controller suscrito a eventos (with Facade for data access)
         IController controller = new Controller(eventBus, arcZoneResolver, facade);
