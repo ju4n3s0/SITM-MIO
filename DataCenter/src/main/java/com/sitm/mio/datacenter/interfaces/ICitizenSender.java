@@ -1,8 +1,10 @@
 package com.sitm.mio.datacenter.interfaces;
 
 /**
- * Interface for sending data to citizen system.
- * Realized by: SenderCiudadanos
+ * Interface for sending data to the Citizen module/system.
+ * Handles communication of bus information, travel times, and stop data.
+ * 
+ * Realized by: CitizenSender
  */
 public interface ICitizenSender {
     void sendBusInfo(Object busInfo);
