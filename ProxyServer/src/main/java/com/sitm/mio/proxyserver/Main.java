@@ -4,6 +4,7 @@ import com.zeroc.Ice.*;
 import com.sitm.mio.proxyserver.analytics.AnalyticsService;
 import com.sitm.mio.proxyserver.cache.CacheManager;
 import com.sitm.mio.proxyserver.ice.AnalyticsI;
+import com.sitm.mio.proxyserver.ice.EventPublisherI;
 import com.sitm.mio.proxyserver.ice.HealthCheckI;
 import com.sitm.mio.proxyserver.ice.ProxyServerI;
 import com.sitm.mio.proxyserver.service.RequestRouter;
@@ -61,6 +62,7 @@ public class Main {
             ProxyServerI proxyServerServant = new ProxyServerI(requestRouter);
             AnalyticsI analyticsServant = new AnalyticsI(analyticsService);
             HealthCheckI healthCheckServant = new HealthCheckI();
+            EventPublisherI eventPublisher = new EventPublisherI();
             
             // Add servants to adapter
             adapter.add(proxyServerServant, Util.stringToIdentity("ProxyServer"));
@@ -72,6 +74,9 @@ public class Main {
             adapter.add(healthCheckServant, Util.stringToIdentity("HealthCheck"));
             System.out.println("HealthCheck servant registered");
             
+            adapter.add(eventPublisher, Util.stringToIdentity("EventPublisher"));
+            System.out.println("EventPublisher servant registered");
+            
             // Activate adapter
             adapter.activate();
             System.out.println("ObjectAdapter activated");
@@ -81,10 +86,11 @@ public class Main {
             System.out.println("║   ProxyServer Ready!                  ║");
             System.out.println("╚════════════════════════════════════════╝");
             System.out.println();
-            System.out.println("ICE Endpoints:");
-            System.out.println("  - ProxyServer:tcp -h localhost -p 10000");
-            System.out.println("  - Analytics:tcp -h localhost -p 10000");
-            System.out.println("  - HealthCheck:tcp -h localhost -p 10000");
+            System.out.println("ICE Server Endpoints:");
+            System.out.println("  ProxyServer:tcp -h localhost -p 10000");
+            System.out.println("  Analytics:tcp -h localhost -p 10000");
+            System.out.println("  HealthCheck:tcp -h localhost -p 10000");
+            System.out.println("  EventPublisher:tcp -h localhost -p 10000");
             System.out.println();
             System.out.println("Waiting for requests...");
             System.out.println("Press Ctrl+C to stop.");
