@@ -4,7 +4,7 @@ import com.zeroc.Ice.Communicator;
 import com.zeroc.Ice.ObjectAdapter;
 import com.zeroc.Ice.ObjectPrx;
 import com.zeroc.Ice.Util;
-import com.sitm.mio.observer.component.ProxyClientICE;
+import com.sitm.mio.observer.component.ProxyClient;
 import com.sitm.mio.observer.ice.ObserverAnalyticsI;
 import com.sitm.mio.observer.ice.EventPublisherI;
 import com.sitm.mio.observer.ice.ProxyServerEventSubscriberI;
@@ -39,7 +39,7 @@ public class Main {
         System.out.println();
         
         Communicator communicator = null;
-        ProxyClientICE proxyClient = null;
+        ProxyClient proxyClient = null;
         
         try {
             // Initialize ICE communicator
@@ -56,7 +56,7 @@ public class Main {
             System.out.println("Initializing components...");
             
             // Initialize ICE client to ProxyServer
-            proxyClient = new ProxyClientICE(proxyHost, proxyPort);
+            proxyClient = new ProxyClient(proxyHost, proxyPort);
             
             // Create ICE servants
             ObserverAnalyticsI analyticsServant = new ObserverAnalyticsI(proxyClient);
@@ -112,7 +112,7 @@ public class Main {
             // Add shutdown hook
             final String finalSubscriptionId = subscriptionId;
             final EventPublisherPrx finalProxyServerPublisher = proxyServerEventPublisher;
-            final ProxyClientICE finalProxyClient = proxyClient;
+            final ProxyClient finalProxyClient = proxyClient;
             final Communicator finalCommunicator = communicator;
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println();
