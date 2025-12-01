@@ -141,11 +141,27 @@ public class ConfigLoader {
     }
     
     /**
+     * Get datagram source strategy.
+     * @return "DATABASE" or "UDP"
+     */
+    public static String getDatagramSource() {
+        return properties.getProperty("datagram.source", "DATABASE").toUpperCase();
+    }
+    
+    /**
      * Get UDP receiver port.
      * @return UDP receiver port
      */
     public static int getUdpReceiverPort() {
         return Integer.parseInt(properties.getProperty("udp.receiver.port", "5000"));
+    }
+    
+    /**
+     * Get database poll interval in milliseconds.
+     * @return Poll interval in ms
+     */
+    public static long getDatabasePollInterval() {
+        return Long.parseLong(properties.getProperty("database.poll.interval", "10000"));
     }
     
     /**
