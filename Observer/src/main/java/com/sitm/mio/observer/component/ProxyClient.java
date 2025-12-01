@@ -15,14 +15,14 @@ import SITM.HealthCheckPrx;
  * 
  * Connects to ProxyServer's Analytics and HealthCheck interfaces.
  */
-public class ProxyClientICE {
+public class ProxyClient {
     
     private final Communicator communicator;
     private final AnalyticsPrx analytics;
     private final HealthCheckPrx healthCheck;
     private final String proxyServerEndpoint;
     
-    public ProxyClientICE(String host, int port) {
+    public ProxyClient(String host, int port) {
         this.proxyServerEndpoint = String.format("tcp -h %s -p %d", host, port);
         
         System.out.println("ProxyClientICE initializing...");
