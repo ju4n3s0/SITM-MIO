@@ -13,10 +13,12 @@ import com.sitm.mio.datacenter.interfaces.IAuthenticator;
 import com.sitm.mio.datacenter.interfaces.IDataCenterFacade;
 import com.sitm.mio.datacenter.interfaces.ILineRepository;
 import com.sitm.mio.datacenter.interfaces.IStopRepository;
+import com.sitm.mio.datacenter.interfaces.ITravelTimeStatsRepository;
 import com.sitm.mio.datacenter.model.DatagramHistoryRecord;
 import com.sitm.mio.datacenter.model.Line;
 import com.sitm.mio.datacenter.model.Stop;
 import com.sitm.mio.datacenter.model.SystemStatistics;
+import com.sitm.mio.datacenter.model.TravelTimeStat;
 import com.sitm.mio.datacenter.model.ZoneStatistics;
 
 /**
@@ -31,13 +33,16 @@ public class DataCenterFacade implements IDataCenterFacade {
     private final IAuthenticator authenticator;
     private final IStopRepository stopRepository;
     private final ILineRepository lineRepository;
+    private final ITravelTimeStatsRepository travelTimeStatsRepository;
+    
     
     public DataCenterFacade(IAuthenticator authenticator, 
                             IStopRepository stopRepository,
-                            ILineRepository lineRepository) {
+                            ILineRepository lineRepository, ITravelTimeStatsRepository travelTimeStatsRepository) {
         this.authenticator = authenticator;
         this.stopRepository = stopRepository;
         this.lineRepository = lineRepository;
+        this.travelTimeStatsRepository = travelTimeStatsRepository;
     }
     
     @Override
@@ -122,4 +127,12 @@ public class DataCenterFacade implements IDataCenterFacade {
         System.out.println("[DataCenterFacade] Authentication Operator");
         return authenticator.authenticateOperator(username, password);
     }
+
+    @Override
+    public Object saveTravelTimeStat(TravelTimeStat stat) {
+        travelTimeStatsRepository.save(stat);
+        return "OK";
+    }
+
+
 }

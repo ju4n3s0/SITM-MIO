@@ -10,6 +10,7 @@ import com.sitm.mio.datacenter.component.MonitoringConsole;
 import com.sitm.mio.datacenter.component.ReceptorDatagramas;
 import com.sitm.mio.datacenter.component.ServiceDataCenter;
 import com.sitm.mio.datacenter.component.StopRepository;
+import com.sitm.mio.datacenter.component.TravelTimeStatsRepository;
 import com.sitm.mio.datacenter.interfaces.IArcZoneResolver;
 import com.sitm.mio.datacenter.interfaces.IAuthenticator;
 import com.sitm.mio.datacenter.interfaces.IController;
@@ -20,6 +21,7 @@ import com.sitm.mio.datacenter.interfaces.ILineRepository;
 import com.sitm.mio.datacenter.interfaces.IMonitoringConsole;
 import com.sitm.mio.datacenter.interfaces.IServiceDataCenter;
 import com.sitm.mio.datacenter.interfaces.IStopRepository;
+import com.sitm.mio.datacenter.interfaces.ITravelTimeStatsRepository;
 import com.sitm.mio.datacenter.model.EventNewDatagram;
 
 /**
@@ -53,7 +55,10 @@ public class Main {
         // 2. Servicios núcleo
         IAuthenticator authenticator = new Authenticator();
         IArcZoneResolver arcZoneResolver = new ArcZoneResolver(stopRepo);
-        IDataCenterFacade facade = new DataCenterFacade(authenticator, stopRepo, lineRepo);
+
+        ITravelTimeStatsRepository travelRepo = new TravelTimeStatsRepository();
+
+        IDataCenterFacade facade = new DataCenterFacade(authenticator, stopRepo, lineRepo, travelRepo);
 
         // 3. Event bus
         IEventBus eventBus = new EventBus();

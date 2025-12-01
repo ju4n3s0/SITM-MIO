@@ -11,6 +11,7 @@ import com.sitm.mio.datacenter.model.DatagramHistoryRecord;
 import com.sitm.mio.datacenter.model.OperatorAuthResult;
 import com.sitm.mio.datacenter.model.OperatorCredentials;
 import com.sitm.mio.datacenter.model.SystemStatistics;
+import com.sitm.mio.datacenter.model.TravelTimeStat;
 import com.sitm.mio.datacenter.model.ZoneStatistics;
 
 public class ServiceDataCenter implements IServiceDataCenter {
@@ -83,6 +84,23 @@ public class ServiceDataCenter implements IServiceDataCenter {
         return filtered;
 
 
+    }
+
+    @Override
+    public void reportTravelTimeStat(String token, TravelTimeStat stat) {
+
+        OperatorAuthResult session = authenticator.findSessionByToken(token);
+
+        if (!authenticator.validateToken(token)) {
+            throw new IllegalArgumentException("Invalid token");
+        }
+
+        
+        if (!session.getAssignedZones().contains(stat.getZoneId())) {
+            throw new SecurityException("Operator not authorized for zone " + stat.getZoneId());
+        }
+
+        facade.saveTravelTimeStat(stat);
     }
     
     
