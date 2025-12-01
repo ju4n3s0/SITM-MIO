@@ -1,0 +1,29 @@
+#
+# DataCenter ICE Configuration
+#
+
+# Object Adapter Configuration
+DataCenterAdapter.Endpoints=tcp -h 0.0.0.0 -p 10003
+
+# Thread Pool (optional - for performance)
+Ice.ThreadPool.Server.Size=4
+Ice.ThreadPool.Server.SizeMax=10
+
+# Logging
+Ice.Warn.Connections=1
+Ice.Trace.Network=0
+Ice.Trace.Protocol=0
+
+# Message Size Limits (optional)
+Ice.MessageSizeMax=65536
+
+# Connection Timeout (milliseconds)
+Ice.Connection.IdleTimeout=60
+
+# ACM (Active Connection Management) - keeps connections alive
+Ice.ACM.Server.Timeout=30
+Ice.ACM.Server.Heartbeat=3
+
+# Network Interface (0.0.0.0 = all interfaces, or specify IP)
+# DataCenterAdapter.Endpoints=tcp -h 192.168.1.100 (placeholder IP) -p 10003
+

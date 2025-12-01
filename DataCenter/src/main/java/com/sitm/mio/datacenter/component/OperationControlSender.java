@@ -9,22 +9,35 @@ import com.sitm.mio.datacenter.interfaces.IOperationControlSender;
  * Realizes: IOperationControlSender
  */
 public class OperationControlSender implements IOperationControlSender {
+
+    private long authResponsesSent = 0;
+    private long queryResponsesSent = 0;
+    private long alertsSent = 0;
     
     @Override
     public void sendAuthResponse(Object response) {
-        // TODO: Send authentication response
-        System.out.println("Sending auth response to OperationControl");
+        authResponsesSent++;
+        log("AUTH_RESPONSE", response);
+        // Futuro: enviar al módulo de Control de Operación vía ICE/HTTP
     }
     
     @Override
     public void sendQueryResponse(Object response) {
-        // TODO: Send query response
-        System.out.println("Sending query response to OperationControl");
+        queryResponsesSent++;
+        log("QUERY_RESPONSE", response);
     }
     
     @Override
     public void sendAlert(Object alert) {
-        // TODO: Send alert
-        System.out.println("Sending alert to OperationControl");
+        alertsSent++;
+        log("ALERT", alert);
+    }
+
+    private void log(String type, Object payload) {
+        System.out.println("[OperationControlSender] " + type +
+                " | counts(auth=" + authResponsesSent +
+                ", query=" + queryResponsesSent +
+                ", alerts=" + alertsSent + ")" +
+                " | payload=" + (payload != null ? payload : "null"));
     }
 }

@@ -1,5 +1,29 @@
 package com.sitm.mio.datacenter;
 
+import com.sitm.mio.datacenter.component.ArcZoneResolver;
+import com.sitm.mio.datacenter.component.Authenticator;
+import com.sitm.mio.datacenter.component.Controller;
+import com.sitm.mio.datacenter.component.DataCenterFacade;
+import com.sitm.mio.datacenter.component.EventBus;
+import com.sitm.mio.datacenter.component.LineRepository;
+import com.sitm.mio.datacenter.component.MonitoringConsole;
+import com.sitm.mio.datacenter.component.ReceptorDatagramas;
+import com.sitm.mio.datacenter.component.ServiceDataCenter;
+import com.sitm.mio.datacenter.component.StopRepository;
+import com.sitm.mio.datacenter.component.TravelTimeStatsRepository;
+import com.sitm.mio.datacenter.interfaces.IArcZoneResolver;
+import com.sitm.mio.datacenter.interfaces.IAuthenticator;
+import com.sitm.mio.datacenter.interfaces.IController;
+import com.sitm.mio.datacenter.interfaces.IDataCenterFacade;
+import com.sitm.mio.datacenter.interfaces.IDatagramReceiver;
+import com.sitm.mio.datacenter.interfaces.IEventBus;
+import com.sitm.mio.datacenter.interfaces.ILineRepository;
+import com.sitm.mio.datacenter.interfaces.IMonitoringConsole;
+import com.sitm.mio.datacenter.interfaces.IServiceDataCenter;
+import com.sitm.mio.datacenter.interfaces.IStopRepository;
+import com.sitm.mio.datacenter.interfaces.ITravelTimeStatsRepository;
+import com.sitm.mio.datacenter.model.EventNewDatagram;
+
 /**
  * DataCenter Application Entry Point
  * 
@@ -23,17 +47,91 @@ public class Main {
     
     public static void main(String[] args) {
         System.out.println("DataCenter starting...");
+
+        // 1. Repositorios
+        IStopRepository stopRepo = new StopRepository();
+        ILineRepository lineRepo = new LineRepository();
+
+        // 2. Servicios núcleo
+        IAuthenticator authenticator = new Authenticator();
+        IArcZoneResolver arcZoneResolver = new ArcZoneResolver(stopRepo);
+
+        ITravelTimeStatsRepository travelRepo = new TravelTimeStatsRepository();
+
+        IDataCenterFacade facade = new DataCenterFacade(authenticator, stopRepo, lineRepo, travelRepo);
+
+        // 3. Event bus
+        IEventBus eventBus = new EventBus();
+        eventBus.start();
+
+        // 4. Receptor de datagramas
+        IDatagramReceiver datagramReceiver = new ReceptorDatagramas(eventBus);
+        datagramReceiver.start();
+
+        // 5. Controller suscrito a eventos (with Facade for data access)
+        IController controller = new Controller(eventBus, arcZoneResolver, facade);
+        // Suscribimos el controller a eventos EventNewDatagram:
+        eventBus.subscribe(
+            EventNewDatagram.class,
+            (java.util.function.Consumer<Object>) event -> controller.processDatagram(event)
+        );
+
+        // 6. Monitoring console
+        IMonitoringConsole monitoring = new MonitoringConsole(datagramReceiver, eventBus);
+        monitoring.getSystemHealth();
+
+        // 7. Servicio “remoto” (ServiceDataCenter) – por ahora local
+        IServiceDataCenter service = new ServiceDataCenter(facade, authenticator, arcZoneResolver);
+
+        // 8. ICE Setup
+        // Load ICE configuration from file (or use command-line args)
+        com.zeroc.Ice.InitializationData initData = new com.zeroc.Ice.InitializationData();
+        initData.properties = com.zeroc.Ice.Util.createProperties();
         
-        // TODO: Initialize and wire up components
-        // 1. Initialize repositories (StopRepository, LineRepository)
-        // 2. Create EventBus
-        // 3. Create ReceptorDatagramas (UDP receiver)
-        // 4. Create ResolvedorDeArcosyZonas
-        // 5. Create Authenticator
-        // 6. Create DataCenterFacade
-        // 7. Start REST API server
-        // 8. Start UDP datagram receiver
+        // Try to load config file, fallback to defaults if not found
+        try {
+            initData.properties.load("config.datacenter");
+            System.out.println("[ICE] Loaded configuration from config.datacenter");
+        } catch (Exception e) {
+            System.out.println("[ICE] Config file not found, using defaults");
+            // Fallback to hardcoded configuration
+            initData.properties.setProperty("DataCenterAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10003");
+        }
         
-        System.out.println("DataCenter running on port 9000");
+        try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, initData)) {
+            
+            // Create ICE servants
+            com.sitm.mio.datacenter.ice.DataCenterI dataCenterServant = 
+                new com.sitm.mio.datacenter.ice.DataCenterI(facade);
+            
+            com.sitm.mio.datacenter.ice.DataCenterEventPublisherI eventPublisher = 
+                new com.sitm.mio.datacenter.ice.DataCenterEventPublisherI();
+            
+            // Connect controller to ICE publisher
+            controller.setIcePublisher(eventPublisher);
+            
+            // Create object adapter using configuration
+            com.zeroc.Ice.ObjectAdapter adapter = communicator.createObjectAdapter("DataCenterAdapter");
+            
+            // Add servants to adapter
+            adapter.add(dataCenterServant, com.zeroc.Ice.Util.stringToIdentity("DataCenter"));
+            adapter.add(eventPublisher, com.zeroc.Ice.Util.stringToIdentity("DataCenterEventPublisher"));
+            
+            // Activate adapter
+            adapter.activate();
+            
+            System.out.println("=".repeat(60));
+            System.out.println("DataCenter ICE Server Started");
+            System.out.println("=".repeat(60));
+            System.out.println("ICE Port: 10003");
+            System.out.println("DataCenter Service: DataCenter:default -p 10003");
+            System.out.println("Event Publisher: DataCenterEventPublisher:default -p 10003");
+            System.out.println("Active subscribers: " + eventPublisher.getSubscriberCount());
+            System.out.println("=".repeat(60));
+            
+            // Wait for shutdown
+            communicator.waitForShutdown();
+        }
     }
+
 }
