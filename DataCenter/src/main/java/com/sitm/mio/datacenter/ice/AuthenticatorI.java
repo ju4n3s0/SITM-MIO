@@ -85,7 +85,7 @@ public class AuthenticatorI implements Authenticator {
             
             if (session != null) {
                 System.out.println("  Invalidated session for: " + session.getUsername());
-                // TODO: Add removeSession method to IAuthenticator
+                authenticator.removeSession(token);
             } else {
                 System.out.println("  Token not found");
             }

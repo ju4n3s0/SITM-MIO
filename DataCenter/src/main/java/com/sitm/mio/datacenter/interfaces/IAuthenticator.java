@@ -11,4 +11,5 @@ public interface IAuthenticator {
     Object authenticateCitizen(String credentials);
     boolean validateToken(String token);
     OperatorAuthResult findSessionByToken(String token);
+    void removeSession(String token);
 }

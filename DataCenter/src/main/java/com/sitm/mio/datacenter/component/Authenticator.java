@@ -127,4 +127,9 @@ public class Authenticator implements IAuthenticator {
         if (token == null) return null;
         return sessions.get(token);
     }
+
+    @Override
+    public void removeSession(String token) {
+        sessions.remove(token);
+    }
 }
