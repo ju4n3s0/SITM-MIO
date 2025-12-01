@@ -4,8 +4,8 @@ import com.zeroc.Ice.Communicator;
 import com.zeroc.Ice.ObjectAdapter;
 import com.zeroc.Ice.ObjectPrx;
 import com.zeroc.Ice.Util;
-import com.sitm.mio.operationcontrol.component.ProxyClientICE;
-import com.sitm.mio.operationcontrol.component.ObserverClientICE;
+import com.sitm.mio.operationcontrol.component.ProxyClient;
+import com.sitm.mio.operationcontrol.component.ObserverAnalyticsClient;
 import com.sitm.mio.operationcontrol.ice.EventSubscriberI;
 import SITM.SystemStatistics;
 import SITM.ZoneStatistics;
@@ -17,7 +17,7 @@ import SITM.EventSubscriberPrx;
  * Main entry point for Operation Control System (ICE version).
  * Monitors both ProxyServer and Observer via ICE RPC.
  */
-public class MainICE {
+public class Main {
     
     public static void main(String[] args) {
         System.out.println("========================================");
@@ -42,8 +42,8 @@ public class MainICE {
         System.out.println();
         
         Communicator communicator = null;
-        ProxyClientICE proxyClient = null;
-        ObserverClientICE observerClient = null;
+        ProxyClient proxyClient = null;
+        ObserverAnalyticsClient observerClient = null;
         String subscriptionId = null;
         
         try {
@@ -72,8 +72,8 @@ public class MainICE {
             System.out.println("Initializing connections...");
             
             // Initialize ICE clients
-            proxyClient = new ProxyClientICE(proxyHost, proxyPort);
-            observerClient = new ObserverClientICE(observerHost, observerPort);
+            proxyClient = new ProxyClient(proxyHost, proxyPort);
+            observerClient = new ObserverAnalyticsClient(observerHost, observerPort);
             
             // Subscribe to Observer's events
             String observerEndpoint = String.format("tcp -h %s -p %d", observerHost, observerPort);
@@ -91,8 +91,8 @@ public class MainICE {
             
             final String finalSubscriptionId = subscriptionId;
             final EventPublisherPrx finalEventPublisher = eventPublisher;
-            final ProxyClientICE finalProxyClient = proxyClient;
-            final ObserverClientICE finalObserverClient = observerClient;
+            final ProxyClient finalProxyClient = proxyClient;
+            final ObserverAnalyticsClient finalObserverClient = observerClient;
             final Communicator finalCommunicator = communicator;
             
             // Add shutdown hook
