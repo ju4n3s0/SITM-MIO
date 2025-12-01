@@ -63,7 +63,7 @@ public class StopRepository implements IStopRepository {
                     if(rs.next()){
                         return mapRowToStop(rs);
                     }
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     throw new RuntimeException(" Error on the query" + e);
                 }
             

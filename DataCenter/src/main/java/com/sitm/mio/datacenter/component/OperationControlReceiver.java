@@ -24,13 +24,15 @@ public class OperationControlReceiver implements IOperationControlReceiver {
         System.out.println("Handling auth request from OperationControl");
 
         if (!(credentials instanceof OperatorCredentials)) {
-            try {
-                throw new IllegalAccessException("Expected operatorCredentials as auth credentials");
-            } catch (IllegalAccessException ex) {
-                System.out.println(ex.getStackTrace());
-            }
+            throw new IllegalArgumentException("Expected OperatorCredentials as auth credentials");
         }
-        return null;
+        OperatorCredentials creds = (OperatorCredentials) credentials;
+
+        //use facade to do the auth
+        Object result = facade.authenticateOperator(creds.getUsername(), creds.getPassword());
+
+        System.out.println("[OperationControlerReceiver] Auth result: " + result);
+        return result;
     }
     
     @Override
@@ -42,7 +44,6 @@ public class OperationControlReceiver implements IOperationControlReceiver {
     @Override
     public Object handleSystemQuery() {
         System.out.println("[OperationControlReceiver] Handing system-wide statistics");
-
         return facade.getSystemStatistics();
     }
 }

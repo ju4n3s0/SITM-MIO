@@ -13,13 +13,13 @@ public class SenderCiudadanos implements ICitizenSender {
     @Override
     public void sendBusInfo(Object busInfo) {
         // TODO: Send bus information to citizen system
-        System.out.println("Sending bus info to citizens");
+        System.out.println("Sending bus info to citizens" + busInfo);
     }
     
     @Override
     public void sendTravelTimeInfo(Object travelTime) {
         // TODO: Send travel time information
-        System.out.println("Sending travel time to citizens");
+        System.out.println("Sending travel time to citizens" );
     }
     
     @Override
