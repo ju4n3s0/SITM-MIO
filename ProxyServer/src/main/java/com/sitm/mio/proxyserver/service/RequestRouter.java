@@ -4,6 +4,7 @@ import SITM.CitizenInformation;
 import com.sitm.mio.proxyserver.interfaces.IDataCenterService;
 import com.sitm.mio.proxyserver.datacenter.DataCenterClient;
 import com.sitm.mio.proxyserver.cache.CacheManager;
+import com.sitm.mio.proxyserver.cache.CacheType;
 
 /**
  * Request router that handles requests from citizens.
@@ -36,7 +37,7 @@ public class RequestRouter {
         
         if (dcInfo != null) {
             // Store in cache for future requests
-            cacheManager.put(key, dcInfo);
+            cacheManager.put(key, dcInfo, CacheType.CITIZEN);
         }
         
         return dcInfo;

@@ -50,7 +50,7 @@ tasks.named('compileJava') {
 }
 
 application {
-    mainClass = 'com.sitm.mio.operationcontrol.MainICE'
+    mainClass = 'com.sitm.mio.operationcontrol.Main'
 }
 
 tasks.named('test') {

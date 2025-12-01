@@ -1,0 +1,25 @@
+#
+# Citizen ICE Configuration
+#
+
+# ProxyServer Connection (ICE Client)
+ProxyServer.Proxy=ProxyServer:tcp -h localhost -p 10000
+
+# Citizen's own adapter (if needed for callbacks)
+CitizenAdapter.Endpoints=tcp -h 0.0.0.0 -p 10001
+
+# Thread Pool
+Ice.ThreadPool.Client.Size=2
+Ice.ThreadPool.Client.SizeMax=5
+
+# Logging
+Ice.Warn.Connections=1
+Ice.Trace.Network=0
+
+# Connection Settings
+Ice.Connection.IdleTimeout=60
+Ice.ACM.Client.Timeout=30
+Ice.ACM.Client.Heartbeat=3
+
+# For production deployment, change to actual IPs:
+# ProxyServer.Proxy=ProxyServer:tcp -h proxyserver.example.com -p 10000

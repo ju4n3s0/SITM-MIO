@@ -84,19 +84,17 @@ public class Main {
         IServiceDataCenter service = new ServiceDataCenter(facade, authenticator, arcZoneResolver);
 
         // 8. ICE Setup
-        // Load ICE configuration from file (or use command-line args)
+        // Load ICE configuration from ConfigLoader
         com.zeroc.Ice.InitializationData initData = new com.zeroc.Ice.InitializationData();
         initData.properties = com.zeroc.Ice.Util.createProperties();
         
-        // Try to load config file, fallback to defaults if not found
-        try {
-            initData.properties.load("config.datacenter");
-            System.out.println("[ICE] Loaded configuration from config.datacenter");
-        } catch (Exception e) {
-            System.out.println("[ICE] Config file not found, using defaults");
-            // Fallback to hardcoded configuration
-            initData.properties.setProperty("DataCenterAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10003");
+        // Load properties from ConfigLoader
+        java.util.Properties iceProps = com.sitm.mio.datacenter.config.ConfigLoader.getIceProperties();
+        for (String key : iceProps.stringPropertyNames()) {
+            initData.properties.setProperty(key, iceProps.getProperty(key));
         }
+        
+        System.out.println("[ICE] Configuration loaded via ConfigLoader");
         
         try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, initData)) {
             
@@ -107,6 +105,9 @@ public class Main {
             com.sitm.mio.datacenter.ice.DataCenterEventPublisherI eventPublisher = 
                 new com.sitm.mio.datacenter.ice.DataCenterEventPublisherI();
             
+            com.sitm.mio.datacenter.ice.AuthenticatorI authenticatorServant = 
+                new com.sitm.mio.datacenter.ice.AuthenticatorI(authenticator);
+            
             // Connect controller to ICE publisher
             controller.setIcePublisher(eventPublisher);
             
@@ -116,6 +117,7 @@ public class Main {
             // Add servants to adapter
             adapter.add(dataCenterServant, com.zeroc.Ice.Util.stringToIdentity("DataCenter"));
             adapter.add(eventPublisher, com.zeroc.Ice.Util.stringToIdentity("DataCenterEventPublisher"));
+            adapter.add(authenticatorServant, com.zeroc.Ice.Util.stringToIdentity("Authenticator"));
             
             // Activate adapter
             adapter.activate();
@@ -126,6 +128,7 @@ public class Main {
             System.out.println("ICE Port: 10003");
             System.out.println("DataCenter Service: DataCenter:default -p 10003");
             System.out.println("Event Publisher: DataCenterEventPublisher:default -p 10003");
+            System.out.println("Authenticator Service: Authenticator:default -p 10003");
             System.out.println("Active subscribers: " + eventPublisher.getSubscriberCount());
             System.out.println("=".repeat(60));
             

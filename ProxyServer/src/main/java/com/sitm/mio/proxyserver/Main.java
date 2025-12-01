@@ -4,6 +4,7 @@ import com.zeroc.Ice.*;
 import com.sitm.mio.proxyserver.analytics.AnalyticsService;
 import com.sitm.mio.proxyserver.cache.CacheManager;
 import com.sitm.mio.proxyserver.ice.AnalyticsI;
+import com.sitm.mio.proxyserver.ice.DataCenterClient;
 import com.sitm.mio.proxyserver.ice.EventPublisherI;
 import com.sitm.mio.proxyserver.ice.HealthCheckI;
 import com.sitm.mio.proxyserver.ice.ProxyServerI;
@@ -82,6 +83,23 @@ public class Main {
             System.out.println("ObjectAdapter activated");
             
             System.out.println();
+            System.out.println("Connecting to DataCenter...");
+            
+            // Initialize DataCenter client
+            DataCenterClient dataCenterClient = new DataCenterClient(cacheManager);
+            dataCenterClient.initialize(args);
+            
+            // Test connection
+            if (dataCenterClient.ping()) {
+                System.out.println("DataCenter connection: OK");
+            } else {
+                System.err.println("WARNING: DataCenter ping failed");
+            }
+            
+            // Subscribe to enriched datagram events
+            dataCenterClient.subscribeToEvents();
+            
+            System.out.println();
             System.out.println("╔════════════════════════════════════════╗");
             System.out.println("║   ProxyServer Ready!                  ║");
             System.out.println("╚════════════════════════════════════════╝");
@@ -91,6 +109,10 @@ public class Main {
             System.out.println("  Analytics:tcp -h localhost -p 10000");
             System.out.println("  HealthCheck:tcp -h localhost -p 10000");
             System.out.println("  EventPublisher:tcp -h localhost -p 10000");
+            System.out.println();
+            System.out.println("DataCenter Connection:");
+            System.out.println("  Subscribed to enriched datagram events");
+            System.out.println("  Query endpoint: DataCenter:tcp -h localhost -p 10003");
             System.out.println();
             System.out.println("Waiting for requests...");
             System.out.println("Press Ctrl+C to stop.");

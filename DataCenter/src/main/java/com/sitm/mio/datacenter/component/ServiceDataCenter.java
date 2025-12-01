@@ -82,8 +82,6 @@ public class ServiceDataCenter implements IServiceDataCenter {
         }
     
         return filtered;
-
-
     }
 
     @Override

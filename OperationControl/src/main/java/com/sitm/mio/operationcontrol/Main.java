@@ -7,11 +7,13 @@ import com.zeroc.Ice.Util;
 import com.sitm.mio.operationcontrol.component.ProxyClient;
 import com.sitm.mio.operationcontrol.component.ObserverAnalyticsClient;
 import com.sitm.mio.operationcontrol.ice.EventSubscriberI;
+import com.sitm.mio.operationcontrol.ui.OperationControlUI;
 import SITM.SystemStatistics;
 import SITM.ZoneStatistics;
 import SITM.HistoricalData;
 import SITM.EventPublisherPrx;
 import SITM.EventSubscriberPrx;
+import javax.swing.SwingUtilities;
 
 /**
  * Main entry point for Operation Control System (ICE version).
@@ -128,8 +130,15 @@ public class Main {
             System.out.println("========================================");
             System.out.println();
             System.out.println("Listening for events from Observer...");
-            System.out.println("Press Ctrl+C to stop");
+            System.out.println("Launching UI...");
             System.out.println();
+            
+            // Launch UI on Event Dispatch Thread
+            SwingUtilities.invokeLater(() -> {
+                OperationControlUI ui = new OperationControlUI();
+                ui.setVisible(true);
+                System.out.println("UI launched successfully");
+            });
             
             // Keep application running to receive events
             communicator.waitForShutdown();

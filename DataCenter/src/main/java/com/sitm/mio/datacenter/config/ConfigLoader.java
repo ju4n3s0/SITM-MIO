@@ -1,4 +1,4 @@
-package com.sitm.mio.proxyserver.config;
+package com.sitm.mio.datacenter.config;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -6,13 +6,13 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Configuration loader for ProxyServer module.
- * Loads settings from config.properties file.
+ * Configuration loader for DataCenter module.
+ * Loads settings from config.properties and config.datacenter files.
  */
 public class ConfigLoader {
     
     private static final String CONFIG_FILE = "config.properties";
-    private static final String ICE_CONFIG_FILE = "config.proxyserver";
+    private static final String ICE_CONFIG_FILE = "config.datacenter";
     private static Properties properties;
     private static Properties iceProperties;
     
@@ -49,7 +49,7 @@ public class ConfigLoader {
     }
     
     /**
-     * Load ICE configuration from config.proxyserver file.
+     * Load ICE configuration from config.datacenter file.
      */
     private static void loadIceConfiguration() {
         iceProperties = new Properties();
@@ -79,25 +79,25 @@ public class ConfigLoader {
      * Set default configuration values.
      */
     private static void setDefaults() {
-        properties.setProperty("server.port", "8080");
+        properties.setProperty("server.port", "9090");
         properties.setProperty("server.host", "0.0.0.0");
-        properties.setProperty("datacenter.url", "http://localhost:9090");
-        properties.setProperty("datacenter.timeout.seconds", "30");
-        properties.setProperty("cache.ttl.minutes", "10");
-        properties.setProperty("cache.max.entries", "1000");
+        properties.setProperty("database.url", "jdbc:postgresql://localhost:5432/mio");
+        properties.setProperty("database.user", "postgres");
+        properties.setProperty("database.password", "postgres");
+        properties.setProperty("udp.receiver.port", "5000");
     }
     
     /**
      * Set default ICE configuration values.
      */
     private static void setIceDefaults() {
-        iceProperties.setProperty("DataCenter.Proxy", "DataCenter:tcp -h localhost -p 10003");
-        iceProperties.setProperty("DataCenterEventPublisher.Proxy", "DataCenterEventPublisher:tcp -h localhost -p 10003");
-        iceProperties.setProperty("ProxyServerAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10004");
-        iceProperties.setProperty("Ice.ThreadPool.Client.Size", "2");
-        iceProperties.setProperty("Ice.ThreadPool.Client.SizeMax", "5");
+        iceProperties.setProperty("DataCenterAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10003");
+        iceProperties.setProperty("Ice.ThreadPool.Server.Size", "4");
+        iceProperties.setProperty("Ice.ThreadPool.Server.SizeMax", "10");
         iceProperties.setProperty("Ice.Warn.Connections", "1");
         iceProperties.setProperty("Ice.Trace.Network", "0");
+        iceProperties.setProperty("Ice.ACM.Server.Timeout", "30");
+        iceProperties.setProperty("Ice.ACM.Server.Heartbeat", "3");
     }
     
     /**
@@ -105,7 +105,7 @@ public class ConfigLoader {
      * @return Server port
      */
     public static int getServerPort() {
-        return Integer.parseInt(properties.getProperty("server.port", "8080"));
+        return Integer.parseInt(properties.getProperty("server.port", "9090"));
     }
     
     /**
@@ -117,51 +117,35 @@ public class ConfigLoader {
     }
     
     /**
-     * Get DataCenter URL.
-     * @return DataCenter URL
+     * Get database URL.
+     * @return Database URL
      */
-    public static String getDataCenterUrl() {
-        return properties.getProperty("datacenter.url", "http://localhost:9090");
+    public static String getDatabaseUrl() {
+        return properties.getProperty("database.url", "jdbc:postgresql://localhost:5432/mio");
     }
     
     /**
-     * Get DataCenter connection timeout in seconds.
-     * @return Timeout in seconds
+     * Get database user.
+     * @return Database user
      */
-    public static int getDataCenterTimeout() {
-        return Integer.parseInt(properties.getProperty("datacenter.timeout.seconds", "30"));
+    public static String getDatabaseUser() {
+        return properties.getProperty("database.user", "postgres");
     }
     
     /**
-     * Get cache TTL in minutes.
-     * @return Cache TTL in minutes
+     * Get database password.
+     * @return Database password
      */
-    public static int getCacheTTLMinutes() {
-        return Integer.parseInt(properties.getProperty("cache.ttl.minutes", "10"));
+    public static String getDatabasePassword() {
+        return properties.getProperty("database.password", "postgres");
     }
     
     /**
-     * Get cache TTL in milliseconds.
-     * @return Cache TTL in milliseconds
+     * Get UDP receiver port.
+     * @return UDP receiver port
      */
-    public static long getCacheTTLMillis() {
-        return getCacheTTLMinutes() * 60 * 1000L;
-    }
-    
-    /**
-     * Get maximum number of cache entries.
-     * @return Maximum cache entries
-     */
-    public static int getMaxCacheEntries() {
-        return Integer.parseInt(properties.getProperty("cache.max.entries", "1000"));
-    }
-    
-    /**
-     * Check if cache is enabled.
-     * @return true if cache is enabled
-     */
-    public static boolean isCacheEnabled() {
-        return Boolean.parseBoolean(properties.getProperty("cache.enabled", "true"));
+    public static int getUdpReceiverPort() {
+        return Integer.parseInt(properties.getProperty("udp.receiver.port", "5000"));
     }
     
     /**
@@ -193,45 +177,45 @@ public class ConfigLoader {
     }
     
     /**
-     * Get DataCenter proxy string.
-     * @return DataCenter proxy string
-     */
-    public static String getDataCenterProxy() {
-        return iceProperties.getProperty("DataCenter.Proxy", "DataCenter:tcp -h localhost -p 10003");
-    }
-    
-    /**
-     * Get DataCenter event publisher proxy string.
-     * @return Event publisher proxy string
-     */
-    public static String getDataCenterEventPublisherProxy() {
-        return iceProperties.getProperty("DataCenterEventPublisher.Proxy", "DataCenterEventPublisher:tcp -h localhost -p 10003");
-    }
-    
-    /**
-     * Get ProxyServer adapter endpoints.
+     * Get DataCenter adapter endpoints.
      * @return Adapter endpoints
      */
-    public static String getProxyServerAdapterEndpoints() {
-        return iceProperties.getProperty("ProxyServerAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10004");
+    public static String getDataCenterAdapterEndpoints() {
+        return iceProperties.getProperty("DataCenterAdapter.Endpoints", "tcp -h 0.0.0.0 -p 10003");
+    }
+    
+    /**
+     * Get ICE server port.
+     * @return ICE server port
+     */
+    public static int getIceServerPort() {
+        String endpoints = getDataCenterAdapterEndpoints();
+        // Extract port from "tcp -h 0.0.0.0 -p 10003"
+        try {
+            String[] parts = endpoints.split("-p");
+            if (parts.length > 1) {
+                return Integer.parseInt(parts[1].trim().split("\\s+")[0]);
+            }
+        } catch (Exception e) {
+            // Ignore parsing errors
+        }
+        return 10003; // Default
     }
     
     /**
      * Print all configuration values.
      */
     public static void printConfiguration() {
-        System.out.println("=== ProxyServer Configuration ===");
+        System.out.println("=== DataCenter Configuration ===");
         System.out.println("Server: " + getServerHost() + ":" + getServerPort());
-        System.out.println("DataCenter URL: " + getDataCenterUrl());
-        System.out.println("DataCenter Timeout: " + getDataCenterTimeout() + "s");
-        System.out.println("Cache TTL: " + getCacheTTLMinutes() + " minutes");
-        System.out.println("Cache Enabled: " + isCacheEnabled());
-        System.out.println("Max Cache Entries: " + getMaxCacheEntries());
+        System.out.println("Database URL: " + getDatabaseUrl());
+        System.out.println("Database User: " + getDatabaseUser());
+        System.out.println("UDP Receiver Port: " + getUdpReceiverPort());
         System.out.println("================================");
         System.out.println("=== ICE Configuration ===");
-        System.out.println("DataCenter Proxy: " + getDataCenterProxy());
-        System.out.println("Event Publisher Proxy: " + getDataCenterEventPublisherProxy());
-        System.out.println("Adapter Endpoints: " + getProxyServerAdapterEndpoints());
+        System.out.println("Adapter Endpoints: " + getDataCenterAdapterEndpoints());
+        System.out.println("ICE Server Port: " + getIceServerPort());
+        System.out.println("Thread Pool Size: " + iceProperties.getProperty("Ice.ThreadPool.Server.Size", "4"));
         System.out.println("========================");
     }
 }

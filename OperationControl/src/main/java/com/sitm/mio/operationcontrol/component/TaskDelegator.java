@@ -37,7 +37,9 @@ public class TaskDelegator implements ITaskDelegator {
         Future<?> future = executorService.submit(() -> {
             try {
                 System.out.println("Executing task: " + taskId + " (type: " + taskType + ")");
-                // TODO: Execute actual task logic based on taskType
+                if(taskType.equals("CALCULATE_AVERAGE_TIME")) {
+                    CalculateAverageTime.calculateAverageTime((String) data);
+                }
                 Thread.sleep(100); // Simulate work
                 System.out.println("Task completed: " + taskId);
             } catch (Exception e) {

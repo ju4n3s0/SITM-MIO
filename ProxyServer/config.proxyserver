@@ -1,0 +1,23 @@
+#
+# ProxyServer ICE Configuration
+#
+
+# DataCenter Connection (ICE Client)
+DataCenter.Proxy=DataCenter:tcp -h localhost -p 10003
+DataCenterEventPublisher.Proxy=DataCenterEventPublisher:tcp -h localhost -p 10003
+
+# ProxyServer's own adapter (for receiving events from DataCenter)
+ProxyServerAdapter.Endpoints=tcp -h 0.0.0.0 -p 10004
+
+# Thread Pool
+Ice.ThreadPool.Client.Size=2
+Ice.ThreadPool.Client.SizeMax=5
+
+# Logging
+Ice.Warn.Connections=1
+Ice.Trace.Network=0
+
+# Connection Settings
+Ice.Connection.IdleTimeout=60
+Ice.ACM.Client.Timeout=30
+Ice.ACM.Client.Heartbeat=3

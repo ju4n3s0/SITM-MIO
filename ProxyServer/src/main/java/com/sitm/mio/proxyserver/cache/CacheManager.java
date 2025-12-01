@@ -17,12 +17,15 @@ public class CacheManager implements ICacheManagement {
      * Create a cache manager with TTL from configuration.
      */
     public CacheManager() {
-        this.storage = new CacheStorage();
         // Load TTL from configuration
         long ttl = com.sitm.mio.proxyserver.config.ConfigLoader.getCacheTTLMillis();
+        
+        // Create storage with persistence enabled
+        this.storage = new CacheStorage(ttl);
         this.cachePolicy = new SimpleCachePolicy(ttl);
         
         System.out.println("CacheManager initialized with TTL: " + (ttl / 60000) + " minutes");
+        System.out.println("  JSON persistence enabled: cache/proxyserver-cache.json");
     }
 
     /**
@@ -48,8 +51,20 @@ public class CacheManager implements ICacheManagement {
      * @param key The cache key
      * @param value The citizen information to cache
      */
-    public void put(String key, CitizenInformation value) {
-        CacheEntry entry = new CacheEntry(value, System.currentTimeMillis());
+    public void put(String key, CitizenInformation value, CacheType cacheType) {
+        CacheEntry entry = new CacheEntry(value, System.currentTimeMillis(), cacheType);
+        storage.put(key, entry);
+        cachePolicy.recordInsertion(key, entry);
+    }
+    
+    /**
+     * Store any object in cache (for operator analytics, enriched datagrams, etc.).
+     * @param key The cache key
+     * @param value The object to cache
+     * @param cacheType The type of cached data
+     */
+    public void put(String key, Object value, CacheType cacheType) {
+        CacheEntry entry = new CacheEntry(value, System.currentTimeMillis(), cacheType);
         storage.put(key, entry);
         cachePolicy.recordInsertion(key, entry);
     }

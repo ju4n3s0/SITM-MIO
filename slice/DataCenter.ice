@@ -34,6 +34,21 @@ module SITM {
     };
     
     /**
+     * Event subscriber interface.
+     * ProxyServer implements this to receive enriched datagrams.
+     * DEFINED FIRST so it can be referenced by DataCenterEventPublisher.
+     */
+    interface DataCenterEventSubscriber {
+        /**
+         * Receive an enriched datagram event.
+         * Called by DataCenter when new data arrives.
+         * 
+         * @param datagram The enriched datagram
+         */
+        void onEnrichedDatagram(EnrichedDatagram datagram);
+    };
+    
+    /**
      * DataCenter interface exposed to ProxyServer.
      * This is the main service interface.
      */
@@ -71,19 +86,5 @@ module SITM {
          * Unsubscribe from events.
          */
         void unsubscribe(DataCenterEventSubscriber* subscriber);
-    };
-    
-    /**
-     * Event subscriber interface.
-     * ProxyServer implements this to receive enriched datagrams.
-     */
-    interface DataCenterEventSubscriber {
-        /**
-         * Receive an enriched datagram event.
-         * Called by DataCenter when new data arrives.
-         * 
-         * @param datagram The enriched datagram
-         */
-        void onEnrichedDatagram(EnrichedDatagram datagram);
     };
 };

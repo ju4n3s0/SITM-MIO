@@ -26,7 +26,7 @@ public class CalculateAverageTime {
      * @param parameters Calculation parameters (origin, destination, etc.)
      * @return Average time result
      */
-    public Object calculateAverageTime(Object parameters) {
+    public static Object calculateAverageTime(Object parameters) {
         // TODO: Implement average time calculation
         // 1. Extract parameters
         // 2. Query historical data
@@ -35,13 +35,4 @@ public class CalculateAverageTime {
         return null;
     }
     
-    /**
-     * Calculate average time for a specific arc.
-     * @param arcId Arc identifier
-     * @return Average time in minutes
-     */
-    public Double calculateArcTime(Long arcId) {
-        // TODO: Implement arc time calculation
-        return null;
-    }
 }
