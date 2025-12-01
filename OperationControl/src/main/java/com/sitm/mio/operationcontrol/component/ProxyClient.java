@@ -12,13 +12,13 @@ import SITM.ZoneStatistics;
  * ICE RPC client for OperationControl to query ProxyServer.
  * Connects to Analytics and HealthCheck interfaces.
  */
-public class ProxyClientICE {
+public class ProxyClient {
     
     private final Communicator communicator;
     private final AnalyticsPrx analytics;
     private final HealthCheckPrx healthCheck;
     
-    public ProxyClientICE(String host, int port) {
+    public ProxyClient(String host, int port) {
         String endpoint = String.format("tcp -h %s -p %d", host, port);
         
         System.out.println("ProxyClientICE initializing...");
