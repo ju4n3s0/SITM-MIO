@@ -3,6 +3,16 @@ package com.sitm.mio.operationcontrol.component;
 import com.sitm.mio.operationcontrol.interfaces.IProxyClient;
 import com.sitm.mio.operationcontrol.model.*;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.net.http.HttpResponse;
+import java.net.http.HttpRequest;
+import java.net.http.HttpClient;
+import java.net.URI;
+
+import java.time.Duration;
+
 /**
  * REST API client for communicating with ProxyCache.
  * Performs both GET and POST requests to access DataCenter services.
@@ -18,10 +28,17 @@ import com.sitm.mio.operationcontrol.model.*;
 public class ProxyClient implements IProxyClient {
     
     private final String baseUrl;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
     private String authToken;
     
     public ProxyClient(String baseUrl) {
         this.baseUrl = baseUrl;
+        this.httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
     
     /**
@@ -31,8 +48,34 @@ public class ProxyClient implements IProxyClient {
      */
     @Override
     public AuthenticatedOperatorData authenticate(OperatorCredentials credentials) {
-        // TODO: Implement POST /api/auth/login
-        return null;
+        try {
+            String jsonBody = objectMapper.writeValueAsString(credentials);
+            
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/auth/login"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(Duration.ofSeconds(10))
+                .build();
+            
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                AuthenticatedOperatorData operatorData = objectMapper.readValue(
+                    response.body(), 
+                    AuthenticatedOperatorData.class
+                );
+                this.authToken = operatorData.getToken();
+                return operatorData;
+            } else {
+                System.err.println("Authentication failed: " + response.statusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Error during authentication: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
     
     /**
@@ -42,8 +85,32 @@ public class ProxyClient implements IProxyClient {
      */
     @Override
     public ZoneStatisticsResponse getZoneStatistics(String zoneId) {
-        // TODO: Implement GET /api/zone-statistics?zoneId={zoneId}
-        return null;
+        try {
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/zone-statistics?zoneId=" + zoneId))
+                .header("Content-Type", "application/json")
+                .GET()
+                .timeout(Duration.ofSeconds(10));
+            
+            // Add auth token if available
+            if (authToken != null) {
+                requestBuilder.header("Authorization", "Bearer " + authToken);
+            }
+            
+            HttpRequest request = requestBuilder.build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                return objectMapper.readValue(response.body(), ZoneStatisticsResponse.class);
+            } else {
+                System.err.println("Failed to get zone statistics: " + response.statusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Error querying zone statistics: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
     
     /**
@@ -51,6 +118,30 @@ public class ProxyClient implements IProxyClient {
      */
     @Override
     public void logout() {
-        // TODO: Implement POST /api/auth/logout
+        try {
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/api/auth/logout"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .timeout(Duration.ofSeconds(10));
+            
+            // Add auth token if available
+            if (authToken != null) {
+                requestBuilder.header("Authorization", "Bearer " + authToken);
+            }
+            
+            HttpRequest request = requestBuilder.build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            if (response.statusCode() == 200) {
+                this.authToken = null;
+                System.out.println("Logout successful");
+            } else {
+                System.err.println("Logout failed: " + response.statusCode());
+            }
+        } catch (Exception e) {
+            System.err.println("Error during logout: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
