@@ -37,6 +37,15 @@ public class EventPublisherI implements EventPublisher {
     }
     
     @Override
+    public String subscribeWithZones(EventSubscriberPrx subscriber, String[] zones, Current current) {
+        // ProxyServer doesn't filter by zone - it forwards all events to Observer
+        // Observer does the actual filtering
+        System.out.println("ProxyServer: subscribeWithZones called (forwarding to subscribe)");
+        System.out.println("  Note: ProxyServer doesn't filter - Observer handles zone filtering");
+        return subscribe(subscriber, current);
+    }
+    
+    @Override
     public void unsubscribe(String subscriptionId, Current current) {
         EventSubscriberPrx removed = subscribers.remove(subscriptionId);
         

@@ -34,6 +34,18 @@ module SITM {
     };
     
     /**
+     * Travel time statistics submission.
+     * Used by OperationControl to submit calculated travel times.
+     */
+    struct TravelTimeSubmission {
+        string zoneId;
+        long originStopId;
+        long destinationStopId;
+        double avgTimeMinutes;
+        int sampleCount;
+    };
+    
+    /**
      * Event subscriber interface.
      * ProxyServer implements this to receive enriched datagrams.
      * DEFINED FIRST so it can be referenced by DataCenterEventPublisher.
@@ -61,6 +73,14 @@ module SITM {
          * @return Travel time information
          */
         CitizenInfoResponse getCitizenInformation(CitizenInfoRequest request);
+        
+        /**
+         * Submit travel time statistics.
+         * OperationControl calls this to store calculated travel times.
+         * 
+         * @param submission Travel time data
+         */
+        void submitTravelTime(TravelTimeSubmission submission);
         
         /**
          * Health check - verify DataCenter is responsive.

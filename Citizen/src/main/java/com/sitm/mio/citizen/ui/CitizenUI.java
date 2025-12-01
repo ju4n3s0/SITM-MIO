@@ -44,9 +44,6 @@ public class CitizenUI extends JFrame {
         queryPanel.add(destinationField);
         JButton queryButton = new JButton("Query");
         queryPanel.add(queryButton);
-        // Button to cancel queries
-        JButton cancelButton = new JButton("Cancel");
-        queryPanel.add(cancelButton);
 
         // Window configuration
         setLayout(new BorderLayout());
@@ -57,19 +54,17 @@ public class CitizenUI extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        // Button listeners
+        // Button listener
         queryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 performQuery();
             }
         });
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                performCancellation();
-            }
-        });
+        
+        // Enter key support
+        originField.addActionListener(e -> performQuery());
+        destinationField.addActionListener(e -> performQuery());
     }
 
     /**
@@ -82,21 +77,6 @@ public class CitizenUI extends JFrame {
             controller.query(origin, destination);
         } catch (NumberFormatException ex) {
             showCitizenInformation("Please enter numeric stop identifiers.");
-        }
-    }
-
-    /**
-     * Perform a query cancellation.
-     */
-    private void performCancellation() {
-        try {
-            long origin = Long.parseLong(originField.getText());
-            long destination = Long.parseLong(destinationField.getText());
-            String key = origin + "-" + destination;
-            // Cancel functionality removed in ICE version
-            showCitizenInformation("Cancel functionality not available in ICE version");
-        } catch (NumberFormatException ex) {
-            showCitizenInformation("Please enter numeric stop identifiers to cancel.");
         }
     }
 

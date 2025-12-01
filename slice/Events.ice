@@ -23,7 +23,10 @@ module SITM {
     // Sequence of events
     sequence<Event> EventSeq;
     
-    // Event subscriber interface (implemented by Observer)
+    // Sequence of zone IDs for filtering
+    sequence<string> ZoneSeq;
+    
+    // Event subscriber interface (implemented by OperationControl)
     interface EventSubscriber {
         /**
          * Receive an event notification.
@@ -38,14 +41,22 @@ module SITM {
         void onEvents(EventSeq events);
     };
     
-    // Event publisher interface (implemented by ProxyServer)
+    // Event publisher interface (implemented by Observer)
     interface EventPublisher {
         /**
-         * Subscribe to events.
+         * Subscribe to all events (no filtering).
          * @param subscriber The subscriber proxy
          * @return Subscription ID
          */
         string subscribe(EventSubscriber* subscriber);
+        
+        /**
+         * Subscribe to events from specific zones only.
+         * @param subscriber The subscriber proxy
+         * @param zones List of zone IDs to monitor (e.g., ["Z35", "Z29"])
+         * @return Subscription ID
+         */
+        string subscribeWithZones(EventSubscriber* subscriber, ZoneSeq zones);
         
         /**
          * Unsubscribe from events.
@@ -54,7 +65,7 @@ module SITM {
         void unsubscribe(string subscriptionId);
         
         /**
-         * Publish an event to all subscribers.
+         * Publish an event to all subscribers (with filtering).
          * @param event The event to publish
          */
         void publishEvent(Event event);

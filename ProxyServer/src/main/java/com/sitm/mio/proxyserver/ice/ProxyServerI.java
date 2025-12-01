@@ -25,4 +25,15 @@ public class ProxyServerI implements ProxyServer {
         // RequestRouter now returns ICE CitizenInformation directly
         return requestRouter.getCitizenInformation(originId, destinationId);
     }
+    
+    @Override
+    public void submitTravelTime(TravelTimeSubmission submission, Current current) {
+        System.out.println("ICE RPC: submitTravelTime from OperationControl");
+        System.out.println("  Zone: " + submission.zoneId);
+        System.out.println("  Route: " + submission.originStopId + " -> " + submission.destinationStopId);
+        System.out.println("  Avg Time: " + submission.avgTimeMinutes + " min");
+        
+        // Forward to DataCenter through RequestRouter
+        requestRouter.submitTravelTime(submission);
+    }
 }

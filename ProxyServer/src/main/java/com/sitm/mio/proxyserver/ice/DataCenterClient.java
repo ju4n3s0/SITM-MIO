@@ -137,6 +137,21 @@ public class DataCenterClient {
     }
     
     /**
+     * Submit travel time statistics to DataCenter.
+     * Forwards data from OperationControl via ProxyServer to DataCenter.
+     */
+    public void submitTravelTime(SITM.TravelTimeSubmission submission) {
+        try {
+            System.out.println("[DataCenterClient] Submitting travel time to DataCenter");
+            dataCenterProxy.submitTravelTime(submission);
+            System.out.println("[DataCenterClient] Travel time submitted successfully");
+        } catch (Exception e) {
+            System.err.println("[DataCenterClient] Error submitting travel time: " + e.getMessage());
+            throw new RuntimeException("Failed to submit travel time", e);
+        }
+    }
+    
+    /**
      * Subscribe to enriched datagram events from DataCenter.
      */
     public void subscribeToEvents() {

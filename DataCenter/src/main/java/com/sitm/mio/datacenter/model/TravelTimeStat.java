@@ -4,43 +4,48 @@ import java.time.Instant;
 
 public class TravelTimeStat {
 
-    private final String zoneId;         // o lineId + zoneId, según tu diseño
-    private final double avgTravelTime;  // en segundos o minutos
-    private final Instant windowStart;   // inicio del período analizado
-    private final Instant windowEnd;     // fin del período
-    private final Instant createdAt;     // cuándo se guardó
+    private final String zoneId;
+    private final long originStopId;
+    private final long destinationStopId;
+    private final double avgTimeMinutes;
+    private final int sampleCount;
+    private final Instant lastUpdated;
 
     public TravelTimeStat(String zoneId,
-                        double avgTravelTime,
-                        Instant windowStart,
-                        Instant windowEnd,
-                        Instant createdAt) {
+                        long originStopId,
+                        long destinationStopId,
+                        double avgTimeMinutes,
+                        int sampleCount,
+                        Instant lastUpdated) {
         this.zoneId = zoneId;
-        this.avgTravelTime = avgTravelTime;
-        this.windowStart = windowStart;
-        this.windowEnd = windowEnd;
-        this.createdAt = createdAt;
+        this.originStopId = originStopId;
+        this.destinationStopId = destinationStopId;
+        this.avgTimeMinutes = avgTimeMinutes;
+        this.sampleCount = sampleCount;
+        this.lastUpdated = lastUpdated;
     }
 
     public String getZoneId() {
         return zoneId;
     }
 
-    public double getAvgTravelTime() {
-        return avgTravelTime;
+    public long getOriginStopId() {
+        return originStopId;
     }
 
-    public Instant getWindowStart() {
-        return windowStart;
+    public long getDestinationStopId() {
+        return destinationStopId;
     }
 
-    public Instant getWindowEnd() {
-        return windowEnd;
+    public double getAvgTimeMinutes() {
+        return avgTimeMinutes;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
+    public int getSampleCount() {
+        return sampleCount;
     }
 
-
+    public Instant getLastUpdated() {
+        return lastUpdated;
+    }
 }

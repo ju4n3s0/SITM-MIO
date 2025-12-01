@@ -31,7 +31,9 @@ public class ZoneUtils {
         if (row == ROWS) row--;
         if (col == COLUMNS) col--;
 
-        return "Z" + row + "_" + col;
+        int index = row * COLUMNS + col + 1;
+       
+        return String.format("Z%02d", index);
     }
 
     private static double clamp(double value, double min, double max) {

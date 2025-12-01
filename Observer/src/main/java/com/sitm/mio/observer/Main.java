@@ -61,7 +61,8 @@ public class Main {
             // Create ICE servants
             ObserverAnalyticsI analyticsServant = new ObserverAnalyticsI(proxyClient);
             EventPublisherI eventPublisher = new EventPublisherI();
-            ProxyServerEventSubscriberI proxyServerSubscriber = new ProxyServerEventSubscriberI(eventPublisher);
+            com.sitm.mio.observer.ice.DataCenterEventSubscriberI dataCenterSubscriber = 
+                new com.sitm.mio.observer.ice.DataCenterEventSubscriberI(eventPublisher);
             
             // Add servants to adapter
             adapter.add(analyticsServant, Util.stringToIdentity("Analytics"));
@@ -70,28 +71,33 @@ public class Main {
             adapter.add(eventPublisher, Util.stringToIdentity("EventPublisher"));
             System.out.println("EventPublisher servant registered");
             
-            ObjectPrx subscriberObj = adapter.add(proxyServerSubscriber, Util.stringToIdentity("ProxyServerSubscriber"));
-            System.out.println("ProxyServerSubscriber servant registered");
+            ObjectPrx subscriberObj = adapter.add(dataCenterSubscriber, Util.stringToIdentity("DataCenterSubscriber"));
+            System.out.println("DataCenterSubscriber servant registered");
             
             // Activate adapter
             adapter.activate();
             System.out.println("ObjectAdapter activated");
             
             System.out.println();
-            // Subscribe to ProxyServer's events
-            String proxyServerEndpoint = String.format("tcp -h %s -p %d", proxyHost, proxyPort);
-            ObjectPrx publisherBase = communicator.stringToProxy("EventPublisher:" + proxyServerEndpoint);
-            EventPublisherPrx proxyServerEventPublisher = EventPublisherPrx.checkedCast(publisherBase);
+            // Subscribe to DataCenter's enriched datagram events
+            String dataCenterEndpoint = "tcp -h localhost -p 10003";  // DataCenter ICE port
+            ObjectPrx dataCenterPublisherBase = communicator.stringToProxy("DataCenterEventPublisher:" + dataCenterEndpoint);
+            SITM.DataCenterEventPublisherPrx dataCenterPublisher = SITM.DataCenterEventPublisherPrx.checkedCast(dataCenterPublisherBase);
             
-            String subscriptionId = null;
-            if (proxyServerEventPublisher != null) {
-                EventSubscriberPrx subscriberPrx = EventSubscriberPrx.uncheckedCast(subscriberObj);
-                subscriptionId = proxyServerEventPublisher.subscribe(subscriberPrx);
-                System.out.println("Subscribed to ProxyServer events");
-                System.out.println("  Subscription ID: " + subscriptionId);
+            if (dataCenterPublisher != null) {
+                // Create DataCenter event subscriber
+                SITM.DataCenterEventSubscriberPrx dataCenterSubscriberPrx = 
+                    SITM.DataCenterEventSubscriberPrx.uncheckedCast(subscriberObj);
+                dataCenterPublisher.subscribe(dataCenterSubscriberPrx);
+                System.out.println("✅ Subscribed to DataCenter enriched datagram events");
+                System.out.println("  DataCenter endpoint: " + dataCenterEndpoint);
             } else {
-                System.err.println("Failed to connect to ProxyServer EventPublisher");
+                System.err.println("❌ Failed to connect to DataCenter EventPublisher");
             }
+            
+            // Note: ProxyServer subscription removed - Observer gets data directly from DataCenter
+            String subscriptionId = null;
+            EventPublisherPrx proxyServerEventPublisher = null;
             
             System.out.println();
             System.out.println("========================================");

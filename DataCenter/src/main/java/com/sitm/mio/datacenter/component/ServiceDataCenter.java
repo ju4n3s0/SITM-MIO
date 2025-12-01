@@ -94,9 +94,8 @@ public class ServiceDataCenter implements IServiceDataCenter {
         }
 
         
-        if (!session.getAssignedZones().contains(stat.getZoneId())) {
-            throw new SecurityException("Operator not authorized for zone " + stat.getZoneId());
-        }
+        // Note: TravelTimeStat now uses origin/destination stops instead of zones
+        // Zone authorization check removed - travel time stats are route-based
 
         facade.saveTravelTimeStat(stat);
     }

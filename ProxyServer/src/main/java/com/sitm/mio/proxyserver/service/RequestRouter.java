@@ -1,23 +1,32 @@
 package com.sitm.mio.proxyserver.service;
 
 import SITM.CitizenInformation;
-import com.sitm.mio.proxyserver.interfaces.IDataCenterService;
-import com.sitm.mio.proxyserver.datacenter.DataCenterClient;
+import SITM.CitizenInfoResponse;
+import SITM.CitizenInfoRequest;
+import SITM.TravelTimeSubmission;
+import com.sitm.mio.proxyserver.ice.DataCenterClient;
 import com.sitm.mio.proxyserver.cache.CacheManager;
 import com.sitm.mio.proxyserver.cache.CacheType;
 
 /**
  * Request router that handles requests from citizens.
- * Routes requests through cache and delegates to DataCenter when needed.
+ * Routes requests through cache and delegates to DataCenter via ICE.
  */
 public class RequestRouter {
 
     private final CacheManager cacheManager;
-    private final IDataCenterService dataCenter;
+    private DataCenterClient dataCenterClient;
 
     public RequestRouter() {
         this.cacheManager = new CacheManager();
-        this.dataCenter = new DataCenterClient();
+    }
+    
+    /**
+     * Set the DataCenter ICE client.
+     * Must be called before routing requests.
+     */
+    public void setDataCenterClient(DataCenterClient client) {
+        this.dataCenterClient = client;
     }
 
     public CitizenInformation getCitizenInformation(long originId, long destinationId) {
@@ -32,15 +41,32 @@ public class RequestRouter {
         
         System.out.println("Cache MISS for key: " + key);
         
-        // Query DataCenter (network call to remote service)
-        CitizenInformation dcInfo = dataCenter.getCitizenInformation(originId, destinationId);
-        
-        if (dcInfo != null) {
-            // Store in cache for future requests
-            cacheManager.put(key, dcInfo, CacheType.CITIZEN);
+        // Query DataCenter via ICE
+        if (dataCenterClient == null) {
+            System.err.println("[RequestRouter] DataCenter client not initialized!");
+            CitizenInformation errorInfo = new CitizenInformation();
+            errorInfo.message = "Error: DataCenter not available";
+            return errorInfo;
         }
         
-        return dcInfo;
+        try {
+            CitizenInfoResponse iceResponse = dataCenterClient.getCitizenInformation(originId, destinationId);
+            
+            // Convert ICE response to CitizenInformation
+            CitizenInformation dcInfo = new CitizenInformation();
+            dcInfo.message = iceResponse.message;
+            
+            // Store in cache for future requests
+            cacheManager.put(key, dcInfo, CacheType.CITIZEN);
+            
+            return dcInfo;
+            
+        } catch (Exception e) {
+            System.err.println("[RequestRouter] Error querying DataCenter: " + e.getMessage());
+            CitizenInformation errorInfo = new CitizenInformation();
+            errorInfo.message = "Error: " + e.getMessage();
+            return errorInfo;
+        }
     }
     
     /**
@@ -49,5 +75,35 @@ public class RequestRouter {
      */
     public CacheManager getCacheManager() {
         return cacheManager;
+    }
+    
+    /**
+     * Submit travel time statistics from OperationControl to DataCenter.
+     * ProxyServer acts as intermediary.
+     */
+    public void submitTravelTime(TravelTimeSubmission submission) {
+        System.out.println("[RequestRouter] Forwarding travel time submission to DataCenter");
+        System.out.println("  Zone: " + submission.zoneId);
+        System.out.println("  Route: " + submission.originStopId + " -> " + submission.destinationStopId);
+        
+        if (dataCenterClient == null) {
+            System.err.println("[RequestRouter] DataCenter client not initialized!");
+            return;
+        }
+        
+        try {
+            dataCenterClient.submitTravelTime(submission);
+            System.out.println("[RequestRouter] Travel time submitted successfully");
+        } catch (Exception e) {
+            System.err.println("[RequestRouter] Error submitting travel time: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Get the DataCenter client instance.
+     */
+    public DataCenterClient getDataCenterClient() {
+        return dataCenterClient;
     }
 }

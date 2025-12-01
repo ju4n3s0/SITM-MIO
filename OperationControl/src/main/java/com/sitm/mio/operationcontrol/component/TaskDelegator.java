@@ -23,11 +23,15 @@ public class TaskDelegator implements ITaskDelegator {
     private final ExecutorService executorService;
     private final Map<String, Future<?>> pendingTasks;
     private final AtomicInteger taskIdCounter;
+    private final CalculateAverageTime avgTimeCalculator;
+    private final CalculateAverageSpeed avgSpeedCalculator;
     
-    public TaskDelegator() {
+    public TaskDelegator(CalculateAverageTime avgTimeCalculator, CalculateAverageSpeed avgSpeedCalculator) {
         this.executorService = Executors.newFixedThreadPool(4);
         this.pendingTasks = new ConcurrentHashMap<>();
         this.taskIdCounter = new AtomicInteger(0);
+        this.avgTimeCalculator = avgTimeCalculator;
+        this.avgSpeedCalculator = avgSpeedCalculator;
     }
     
     @Override
@@ -36,14 +40,45 @@ public class TaskDelegator implements ITaskDelegator {
         
         Future<?> future = executorService.submit(() -> {
             try {
-                System.out.println("Executing task: " + taskId + " (type: " + taskType + ")");
-                if(taskType.equals("CALCULATE_AVERAGE_TIME")) {
-                    CalculateAverageTime.calculateAverageTime((String) data);
+                System.out.println("[TaskDelegator] Executing task: " + taskId + " (type: " + taskType + ")");
+                
+                if (taskType.equals("CALCULATE_AVERAGE_TIME")) {
+                    // Data should be Map with originStopId, destinationStopId, timeWindow
+                    if (data instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> params = (Map<String, Object>) data;
+                        long originStopId = ((Number) params.get("originStopId")).longValue();
+                        long destinationStopId = ((Number) params.get("destinationStopId")).longValue();
+                        int timeWindow = params.containsKey("timeWindow") 
+                            ? ((Number) params.get("timeWindow")).intValue() 
+                            : 60;
+                        
+                        if (avgTimeCalculator != null) {
+                            avgTimeCalculator.calculateAverageTime(originStopId, destinationStopId, timeWindow);
+                        }
+                    }
+                } else if (taskType.equals("CALCULATE_ARC_SPEEDS")) {
+                    // Data should be zoneId string
+                    if (data instanceof String) {
+                        String zoneId = (String) data;
+                        if (avgSpeedCalculator != null) {
+                            avgSpeedCalculator.calculateArcSpeedsForZone(zoneId);
+                        }
+                    }
+                } else if (taskType.equals("CALCULATE_ARC_SPEED")) {
+                    // Data should be arcId
+                    if (data instanceof Long || data instanceof Integer) {
+                        Long arcId = ((Number) data).longValue();
+                        if (avgSpeedCalculator != null) {
+                            avgSpeedCalculator.calculateArcSpeed(arcId);
+                        }
+                    }
                 }
-                Thread.sleep(100); // Simulate work
-                System.out.println("Task completed: " + taskId);
+                
+                System.out.println("[TaskDelegator] Task completed: " + taskId);
             } catch (Exception e) {
-                System.err.println("Task failed: " + taskId + " - " + e.getMessage());
+                System.err.println("[TaskDelegator] Task failed: " + taskId + " - " + e.getMessage());
+                e.printStackTrace();
             } finally {
                 pendingTasks.remove(taskId);
             }

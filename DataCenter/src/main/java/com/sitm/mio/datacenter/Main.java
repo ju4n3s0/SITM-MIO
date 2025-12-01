@@ -129,9 +129,13 @@ public class Main {
         
         try (com.zeroc.Ice.Communicator communicator = com.zeroc.Ice.Util.initialize(args, initData)) {
             
+            // Create travel time calculator for citizen queries
+            com.sitm.mio.datacenter.component.TravelTimeCalculator travelTimeCalculator = 
+                new com.sitm.mio.datacenter.component.TravelTimeCalculator(travelRepo);
+            
             // Create ICE servants
             com.sitm.mio.datacenter.ice.DataCenterI dataCenterServant = 
-                new com.sitm.mio.datacenter.ice.DataCenterI(facade);
+                new com.sitm.mio.datacenter.ice.DataCenterI(facade, travelTimeCalculator);
             
             com.sitm.mio.datacenter.ice.DataCenterEventPublisherI eventPublisher = 
                 new com.sitm.mio.datacenter.ice.DataCenterEventPublisherI();

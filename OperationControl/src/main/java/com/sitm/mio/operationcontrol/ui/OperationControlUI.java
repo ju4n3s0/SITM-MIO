@@ -36,15 +36,15 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     
     // Dashboard components
     private JPanel dashboardPanel;
-    private JTextArea eventLogArea;
-    private JTextField zoneQueryField;
-    private JButton queryButton;
+    private JLabel realTimeInfoLabel;
     private JButton logoutButton;
     private JLabel operatorInfoLabel;
     private JLabel assignedZonesLabel;
     private JLabel connectionStatusLabel;
     private JPanel statsPanel;
     private com.sitm.mio.operationcontrol.component.ProxyClient proxyClient;
+    private com.sitm.mio.operationcontrol.ice.EventSubscriberI eventSubscriber;
+    private Runnable onZoneAssignedCallback;
     
     public OperationControlUI() {
         initializeUI();
@@ -149,9 +149,11 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
         
         operatorInfoLabel = new JLabel("Operator: ");
         operatorInfoLabel.setFont(new Font("Arial", Font.BOLD, 12));
-        assignedZonesLabel = new JLabel("Assigned Zones: ");
+        assignedZonesLabel = new JLabel("Assigned Zone: ");
+        assignedZonesLabel.setFont(new Font("Arial", Font.BOLD, 12));
         connectionStatusLabel = new JLabel("Status: Disconnected");
         connectionStatusLabel.setForeground(Color.RED);
+        connectionStatusLabel.setFont(new Font("Arial", Font.BOLD, 12));
         
         infoPanel.add(operatorInfoLabel);
         infoPanel.add(assignedZonesLabel);
@@ -168,44 +170,25 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
         
         dashboardPanel.add(topPanel, BorderLayout.NORTH);
         
-        // Center panel - Event log
+        // Center panel - Real-Time Data Display
         JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setBorder(BorderFactory.createTitledBorder("Event Log"));
+        centerPanel.setBorder(BorderFactory.createTitledBorder("Real-Time Zone Data"));
         
-        eventLogArea = new JTextArea();
-        eventLogArea.setEditable(false);
-        eventLogArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scrollPane = new JScrollPane(eventLogArea);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
+        // Create a label to show real-time information
+        realTimeInfoLabel = new JLabel("<html><b>Waiting for real-time data...</b><br>" +
+            "Events will appear here automatically.</html>");
+        realTimeInfoLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        realTimeInfoLabel.setVerticalAlignment(JLabel.TOP);
+        realTimeInfoLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        JScrollPane infoScrollPane = new JScrollPane(realTimeInfoLabel);
+        infoScrollPane.setPreferredSize(new Dimension(600, 300));
+        centerPanel.add(infoScrollPane, BorderLayout.CENTER);
         
         dashboardPanel.add(centerPanel, BorderLayout.CENTER);
         
-        // Bottom panel - Zone query and statistics
-        JPanel bottomPanel = new JPanel(new BorderLayout(10, 10));
-        
-        // Query panel
-        JPanel queryPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        queryPanel.setBorder(BorderFactory.createTitledBorder("Zone Query"));
-        queryPanel.add(new JLabel("Zone ID:"));
-        zoneQueryField = new JTextField(15);
-        queryPanel.add(zoneQueryField);
-        queryButton = new JButton("Query Statistics");
-        queryButton.addActionListener(e -> handleZoneQuery());
-        queryPanel.add(queryButton);
-        
-        zoneQueryField.addActionListener(e -> handleZoneQuery());
-        
-        bottomPanel.add(queryPanel, BorderLayout.NORTH);
-        
-        // Statistics panel
-        statsPanel = new JPanel(new GridLayout(0, 1, 5, 5));
-        statsPanel.setBorder(BorderFactory.createTitledBorder("Zone Statistics"));
-        statsPanel.setPreferredSize(new Dimension(600, 150));
-        JScrollPane statsScrollPane = new JScrollPane(statsPanel);
-        bottomPanel.add(statsScrollPane, BorderLayout.CENTER);
-        
-        dashboardPanel.add(bottomPanel, BorderLayout.SOUTH);
+        // Note: Bottom statistics panel removed - not implemented
+        // Real-time event data is shown in the center panel above
     }
     
     private void handleLogin() {
@@ -237,17 +220,26 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
             protected void done() {
                 try {
                     AuthenticatedOperatorData operator = get();
-                    if (operator != null) {
+                    
+                    // Validate authentication result
+                    if (operator != null && 
+                        operator.getOperatorId() != null && 
+                        !operator.getOperatorId().isEmpty() &&
+                        operator.getToken() != null && 
+                        !operator.getToken().isEmpty()) {
+                        
                         showDashboard(operator);
                     } else {
                         statusLabel.setText("Invalid credentials");
                         statusLabel.setForeground(Color.RED);
                         loginButton.setEnabled(true);
+                        System.out.println("[UI] Login rejected - invalid authentication result");
                     }
                 } catch (Exception e) {
                     statusLabel.setText("Login failed: " + e.getMessage());
                     statusLabel.setForeground(Color.RED);
                     loginButton.setEnabled(true);
+                    System.err.println("[UI] Login error: " + e.getMessage());
                 }
             }
         };
@@ -256,7 +248,25 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     
     private void showDashboard(AuthenticatedOperatorData operator) {
         operatorInfoLabel.setText("Operator: " + operator.getFullName() + " (" + operator.getUsername() + ")");
-        assignedZonesLabel.setText("Assigned Zones: " + String.join(", ", operator.getAssignedZones()));
+        
+        // Display single assigned zone
+        String assignedZone = operator.getAssignedZones().isEmpty() ? "None" : operator.getAssignedZones().get(0);
+        assignedZonesLabel.setText("Assigned Zone: " + assignedZone);
+        
+        // Set zone filter for event subscriber
+        if (eventSubscriber != null && !assignedZone.equals("None")) {
+            eventSubscriber.setAssignedZone(assignedZone);
+            System.out.println("[OperationControlUI] Client-side zone filter set to: " + assignedZone);
+            
+            // Trigger resubscription with zone filtering
+            if (onZoneAssignedCallback != null) {
+                System.out.println("[OperationControlUI] Triggering server-side resubscription...");
+                onZoneAssignedCallback.run();
+            }
+        }
+        
+        // Update connection status to Connected
+        updateConnectionStatus(true);
         
         // Clear login fields
         usernameField.setText("");
@@ -268,42 +278,6 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
         setContentPane(dashboardPanel);
         revalidate();
         repaint();
-        
-        logToEventArea("Logged in successfully as " + operator.getFullName());
-    }
-    
-    private void handleZoneQuery() {
-        String zoneId = zoneQueryField.getText().trim();
-        if (zoneId.isEmpty()) {
-            displayAlert("Please enter a zone ID");
-            return;
-        }
-        
-        queryButton.setEnabled(false);
-        
-        SwingWorker<ZoneStatisticsResponse, Void> worker = new SwingWorker<>() {
-            @Override
-            protected ZoneStatisticsResponse doInBackground() {
-                if (controller != null) {
-                    return controller.queryZoneStatistics(zoneId);
-                }
-                return null;
-            }
-            
-            @Override
-            protected void done() {
-                queryButton.setEnabled(true);
-                try {
-                    ZoneStatisticsResponse stats = get();
-                    if (stats != null) {
-                        logToEventArea("Zone statistics retrieved for: " + zoneId);
-                    }
-                } catch (Exception e) {
-                    displayAlert("Query failed: " + e.getMessage());
-                }
-            }
-        };
-        worker.execute();
     }
     
     private void handleLogout() {
@@ -315,31 +289,27 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
         );
         
         if (confirm == JOptionPane.YES_OPTION) {
+            // Set status to disconnected first
+            updateConnectionStatus(false);
+            
             if (controller != null) {
                 controller.logout();
             }
             
-            // Clear event log
-            eventLogArea.setText("");
+            // Clear stats panel
             statsPanel.removeAll();
             statsPanel.revalidate();
             statsPanel.repaint();
             
-            // Switch back to login
-            setContentPane(loginPanel);
-            revalidate();
-            repaint();
-            
-            updateConnectionStatus(false);
+            // Close the UI window
+            dispose();
+            System.exit(0);
         }
     }
     
     private void logToEventArea(String message) {
-        SwingUtilities.invokeLater(() -> {
-            String timestamp = new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
-            eventLogArea.append("[" + timestamp + "] " + message + "\n");
-            eventLogArea.setCaretPosition(eventLogArea.getDocument().getLength());
-        });
+        // Event log removed - using direct display instead
+        System.out.println("[OperationControl] " + message);
     }
     
     // ==================== IVisualizacion Implementation ====================
@@ -347,14 +317,12 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     @Override
     public void displayBusPosition(BusPositionUpdatedEvent event) {
         SwingUtilities.invokeLater(() -> {
-            String message = String.format("Bus %s - Zone: %s, Speed: %.1f km/h, Location: (%.6f, %.6f)",
+            String message = String.format("Bus %s - Zone: %s, Speed: %.1f km/h",
                 event.getBusId(),
                 event.getZoneId(),
-                event.getSpeed(),
-                event.getLatitude(),
-                event.getLongitude()
+                event.getSpeed()
             );
-            logToEventArea(message);
+            System.out.println("[BusPosition] " + message);
         });
     }
     
@@ -390,14 +358,15 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     @Override
     public void displayAssignedZones(List<String> zones) {
         SwingUtilities.invokeLater(() -> {
-            assignedZonesLabel.setText("Assigned Zones: " + String.join(", ", zones));
+            String zone = zones.isEmpty() ? "None" : zones.get(0);
+            assignedZonesLabel.setText("Assigned Zone: " + zone);
         });
     }
     
     @Override
     public void displayAlert(String message) {
         SwingUtilities.invokeLater(() -> {
-            logToEventArea("ALERT: " + message);
+            System.out.println("[ALERT] " + message);
             JOptionPane.showMessageDialog(this, message, "Alert", JOptionPane.WARNING_MESSAGE);
         });
     }
@@ -418,7 +387,66 @@ public class OperationControlUI extends JFrame implements IVisualizacion {
     @Override
     public void displayTrends(Object trends) {
         SwingUtilities.invokeLater(() -> {
-            logToEventArea("Historical trends data received: " + trends);
+            System.out.println("[Trends] Historical trends data received: " + trends);
         });
+    }
+    
+    /**
+     * Update real-time information display.
+     * Called by EventSubscriberI when new events arrive.
+     */
+    public void updateRealTimeInfo(String info) {
+        System.out.println("[OperationControlUI] updateRealTimeInfo called");
+        System.out.println("[OperationControlUI] Info: " + info.substring(0, Math.min(100, info.length())) + "...");
+        SwingUtilities.invokeLater(() -> {
+            if (realTimeInfoLabel != null) {
+                System.out.println("[OperationControlUI] Setting text on realTimeInfoLabel");
+                realTimeInfoLabel.setText(info);
+                
+                // Force the parent container to refresh
+                if (realTimeInfoLabel.getParent() != null) {
+                    realTimeInfoLabel.getParent().revalidate();
+                    realTimeInfoLabel.getParent().repaint();
+                }
+                
+                // Also refresh the main dashboard
+                if (dashboardPanel != null) {
+                    dashboardPanel.revalidate();
+                    dashboardPanel.repaint();
+                }
+                
+                System.out.println("[OperationControlUI] Label updated and UI refreshed");
+            } else {
+                System.out.println("[OperationControlUI] ERROR: realTimeInfoLabel is null!");
+            }
+        });
+    }
+    
+    /**
+     * Set the event subscriber for zone filtering.
+     */
+    public void setEventSubscriber(com.sitm.mio.operationcontrol.ice.EventSubscriberI subscriber) {
+        this.eventSubscriber = subscriber;
+    }
+    
+    /**
+     * Get the assigned zone for the logged-in operator.
+     */
+    public String getAssignedZone() {
+        if (assignedZonesLabel != null) {
+            String text = assignedZonesLabel.getText();
+            if (text != null && text.startsWith("Assigned Zone: ")) {
+                String zone = text.substring("Assigned Zone: ".length()).trim();
+                return zone.equals("None") ? null : zone;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Set callback to be called when zone is assigned after login.
+     */
+    public void setOnZoneAssignedCallback(Runnable callback) {
+        this.onZoneAssignedCallback = callback;
     }
 }

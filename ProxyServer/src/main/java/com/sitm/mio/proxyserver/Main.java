@@ -85,19 +85,23 @@ public class Main {
             System.out.println();
             System.out.println("Connecting to DataCenter...");
             
-            // Initialize DataCenter client
-            DataCenterClient dataCenterClient = new DataCenterClient(cacheManager);
-            dataCenterClient.initialize(args);
+            // Initialize DataCenter ICE client
+            DataCenterClient dataCenterIceClient = new DataCenterClient(cacheManager);
+            dataCenterIceClient.initialize(args);
+            
+            // Connect ICE client to RequestRouter
+            requestRouter.setDataCenterClient(dataCenterIceClient);
+            System.out.println("DataCenter ICE client connected to RequestRouter");
             
             // Test connection
-            if (dataCenterClient.ping()) {
+            if (dataCenterIceClient.ping()) {
                 System.out.println("DataCenter connection: OK");
             } else {
                 System.err.println("WARNING: DataCenter ping failed");
             }
             
             // Subscribe to enriched datagram events
-            dataCenterClient.subscribeToEvents();
+            dataCenterIceClient.subscribeToEvents();
             
             System.out.println();
             System.out.println("╔════════════════════════════════════════╗");

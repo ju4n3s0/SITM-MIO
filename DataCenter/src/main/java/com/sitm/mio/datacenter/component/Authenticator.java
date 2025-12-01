@@ -55,14 +55,18 @@ public class Authenticator implements IAuthenticator {
                         long operatorId = rs.getLong("operator_id");
                         String storedHash = rs.getString("password_hash");
                         
+                        // Trim whitespace from both passwords
+                        String storedPassword = storedHash != null ? storedHash.trim() : "";
+                        String providedPassword = password != null ? password.trim() : "";
+                        
                         System.out.println("[Authenticator] Found operator ID: " + operatorId);
-                        System.out.println("[Authenticator] Stored password: '" + storedHash + "'");
-                        System.out.println("[Authenticator] Provided password: '" + password + "'");
-                        System.out.println("[Authenticator] Passwords match: " + storedHash.equals(password));
+                        System.out.println("[Authenticator] Stored password: '" + storedPassword + "' (length: " + storedPassword.length() + ")");
+                        System.out.println("[Authenticator] Provided password: '" + providedPassword + "' (length: " + providedPassword.length() + ")");
+                        System.out.println("[Authenticator] Passwords match: " + storedPassword.equals(providedPassword));
 
                         //Validate the password
-                        if (!storedHash.equals(password)) {
-                            System.out.println("[Authenticator] Password mismatch - authentication failed");
+                        if (storedPassword.isEmpty() || !storedPassword.equals(providedPassword)) {
+                            System.out.println("[Authenticator] ❌ Password mismatch - authentication FAILED");
                             return null;
                         }
                         

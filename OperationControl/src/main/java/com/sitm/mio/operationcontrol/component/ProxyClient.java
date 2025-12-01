@@ -28,7 +28,7 @@ public class ProxyClient implements IProxyClient {
     private final int dataCenterPort;
     
     public ProxyClient(String host, int port) {
-        this(host, port, "localhost", 10003);
+        this(host, port, "localhost", 10003);  // DataCenter ICE port
     }
     
     public ProxyClient(String host, int port, String dataCenterHost, int dataCenterPort) {
@@ -137,17 +137,28 @@ public class ProxyClient implements IProxyClient {
             SITM.OperatorAuthResult iceResult = authenticator.authenticateOperator(iceCredentials);
             
             if (iceResult == null) {
-                System.err.println("[ProxyClient] Authentication failed - invalid credentials");
+                System.err.println("[ProxyClient] Authentication failed - null result from DataCenter");
+                return null;
+            }
+            
+            // Validate ICE result has required fields
+            if (iceResult.operatorId <= 0 || 
+                iceResult.username == null || iceResult.username.trim().isEmpty() ||
+                iceResult.token == null || iceResult.token.trim().isEmpty()) {
+                System.err.println("[ProxyClient] Authentication failed - invalid result data");
+                System.err.println("  Operator ID: " + iceResult.operatorId);
+                System.err.println("  Username: " + iceResult.username);
+                System.err.println("  Token: " + iceResult.token);
                 return null;
             }
             
             // Convert ICE result to AuthenticatedOperatorData
             AuthenticatedOperatorData authData = new AuthenticatedOperatorData();
             authData.setOperatorId(String.valueOf(iceResult.operatorId));
-            authData.setUsername(iceResult.username);
-            authData.setFullName(iceResult.username); // Use username as full name for now
+            authData.setUsername(iceResult.username.trim());
+            authData.setFullName(iceResult.username.trim()); // Use username as full name for now
             authData.setAssignedZones(java.util.Arrays.asList(iceResult.assignedZones));
-            authData.setToken(iceResult.token);
+            authData.setToken(iceResult.token.trim());
             
             System.out.println("[ProxyClient] Authentication successful!");
             System.out.println("  Operator ID: " + authData.getOperatorId());

@@ -69,6 +69,43 @@ public class ObserverAnalyticsClient {
         }
     }
     
+    /**
+     * Query travel time between two stops.
+     * @param originStopId Origin stop ID
+     * @param destinationStopId Destination stop ID
+     * @return Travel time data (to be parsed by DataAccessLayer)
+     */
+    public Object queryTravelTime(long originStopId, long destinationStopId) {
+        try {
+            // TODO: Call actual Observer method when available
+            // For now, return null to trigger fallback simulation
+            System.out.println("[ObserverAnalyticsClient] Query travel time: " + originStopId + " -> " + destinationStopId);
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error querying travel time from Observer: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Query arc speeds for all arcs in a zone.
+     * PRIMARY method for operation controllers to visualize real-time arc speeds.
+     * 
+     * @param zoneId Zone identifier (e.g., "Z2_5")
+     * @return Arc speed data (to be parsed by DataAccessLayer)
+     */
+    public Object queryZoneArcSpeeds(String zoneId) {
+        try {
+            // TODO: Call actual Observer method when available
+            // For now, return null to trigger fallback simulation
+            System.out.println("[ObserverAnalyticsClient] Query arc speeds for zone: " + zoneId);
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error querying zone arc speeds from Observer: " + e.getMessage());
+            return null;
+        }
+    }
+    
     public boolean isObserverAvailable() {
         try {
             analytics.ice_ping();
