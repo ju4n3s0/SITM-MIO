@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.zeroc.gradle.ice-builder.slice' version '1.5.0'
 }
 
 group = 'com.sitm.mio'
@@ -12,6 +13,10 @@ repositories {
 }
 
 dependencies {
+    // ZeroC ICE - RPC framework
+    compileOnly 'com.zeroc:ice:3.7.10'
+    implementation 'com.zeroc:ice:3.7.10'
+    
     // WebSocket support
     implementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
     implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.15'
@@ -39,6 +44,26 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testImplementation 'org.mockito:mockito-core:5.3.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.3.1'
+}
+
+// ICE Slice configuration
+slice {
+    java {
+        files = fileTree(dir: '../slice', include: '**/*.ice')
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += file("${buildDir}/generated-src")
+        }
+    }
+}
+
+// Ensure compileJava depends on compileSlice
+tasks.named('compileJava') {
+    dependsOn tasks.named('compileSlice')
 }
 
 application {
