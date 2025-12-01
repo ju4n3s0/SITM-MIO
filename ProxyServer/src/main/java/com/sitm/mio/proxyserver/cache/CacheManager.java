@@ -1,6 +1,6 @@
 package com.sitm.mio.proxyserver.cache;
 
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
+import SITM.CitizenInformation;
 import com.sitm.mio.proxyserver.interfaces.ICacheManagement;
 import com.sitm.mio.proxyserver.interfaces.ICachePolicy;
 
@@ -52,5 +52,13 @@ public class CacheManager implements ICacheManagement {
         CacheEntry entry = new CacheEntry(value, System.currentTimeMillis());
         storage.put(key, entry);
         cachePolicy.recordInsertion(key, entry);
+    }
+    
+    /**
+     * Get the current number of entries in the cache.
+     * @return Number of cached entries
+     */
+    public int getCacheSize() {
+        return storage.size();
     }
 }

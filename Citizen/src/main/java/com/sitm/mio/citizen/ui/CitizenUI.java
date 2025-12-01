@@ -93,7 +93,8 @@ public class CitizenUI extends JFrame {
             long origin = Long.parseLong(originField.getText());
             long destination = Long.parseLong(destinationField.getText());
             String key = origin + "-" + destination;
-            controller.cancelQuery(key);
+            // Cancel functionality removed in ICE version
+            showCitizenInformation("Cancel functionality not available in ICE version");
         } catch (NumberFormatException ex) {
             showCitizenInformation("Please enter numeric stop identifiers to cancel.");
         }

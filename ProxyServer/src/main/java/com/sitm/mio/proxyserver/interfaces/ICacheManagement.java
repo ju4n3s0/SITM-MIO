@@ -1,6 +1,6 @@
 package com.sitm.mio.proxyserver.interfaces;
 
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
+import SITM.CitizenInformation;
 
 public interface ICacheManagement {
 

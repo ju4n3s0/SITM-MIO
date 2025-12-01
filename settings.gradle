@@ -1,0 +1,9 @@
+rootProject.name = 'SITM-MIO'
+
+// Include all modules
+include 'Citizen'
+include 'ProxyServer'
+include 'DataCenter'
+include 'Observer'
+include 'OperationControl'
+include 'GraphCreator'

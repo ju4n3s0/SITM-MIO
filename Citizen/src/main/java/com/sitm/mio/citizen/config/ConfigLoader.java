@@ -61,7 +61,15 @@ public class ConfigLoader {
      * @return ProxyServer URL
      */
     public static String getProxyServerUrl() {
-        return properties.getProperty("proxyserver.url", "http://localhost:8080");
+        return System.getProperty("proxyserver.url", "http://localhost:8080");
+    }
+    
+    public static String getProxyServerHost() {
+        return System.getProperty("proxyserver.host", "localhost");
+    }
+    
+    public static int getProxyServerPort() {
+        return Integer.parseInt(System.getProperty("proxyserver.port", "10000"));
     }
     
     /**

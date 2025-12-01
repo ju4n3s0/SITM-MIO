@@ -1,13 +1,8 @@
 package com.sitm.mio.citizen.controller;
 
-import com.sitm.mio.citizen.cache.ClientCache;
-import com.sitm.mio.citizen.dto.CitizenInformation;
-import com.sitm.mio.citizen.dto.GetCitizenInformationRequest;
-import com.sitm.mio.citizen.service.TravelTimeService;
-import com.sitm.mio.citizen.service.QueryCancellationService;
+import SITM.CitizenInformation;
 import com.sitm.mio.citizen.ui.CitizenUI;
-import com.sitm.mio.citizen.proxyserver.ICacheService;
-import com.sitm.mio.citizen.proxyserver.ProxyServerClient;
+import com.sitm.mio.citizen.proxyserver.ProxyServerClientICE;
 
 /**
  * Controller for the Citizen application.
@@ -16,17 +11,11 @@ import com.sitm.mio.citizen.proxyserver.ProxyServerClient;
 public class CitizenController {
 
     private final CitizenUI view;
-    private final ClientCache cache;
-    private final TravelTimeService service;
-    private final QueryCancellationService cancellationService;
+    private final ProxyServerClientICE proxyClient;
 
     public CitizenController(CitizenUI view) {
         this.view = view;
-        
-        this.cancellationService = new QueryCancellationService();
-        ICacheService proxy = new ProxyServerClient();
-        this.cache = new ClientCache(proxy, cancellationService);
-        this.service = new TravelTimeService(cache);
+        this.proxyClient = new ProxyServerClientICE();
     }
 
     /**
@@ -35,21 +24,20 @@ public class CitizenController {
      * @param destinationId The destination stop ID
      */
     public void query(long originId, long destinationId) {
-        GetCitizenInformationRequest request = new GetCitizenInformationRequest(originId, destinationId);
-        CitizenInformation info = service.query(request);
-        if (info == null) {
+        CitizenInformation info = proxyClient.getCitizenInformation(originId, destinationId);
+        if (info == null || info.message == null || info.message.isEmpty()) {
             view.showCitizenInformation("Could not obtain information for stops " + originId + " → " + destinationId);
         } else {
-            view.showCitizenInformation(info.getMessage());
+            view.showCitizenInformation(info.message);
         }
     }
 
     /**
-     * Cancel an ongoing query.
-     * @param requestKey The key identifying the request to cancel
+     * Shutdown the ICE client when done.
      */
-    public void cancelQuery(String requestKey) {
-        cache.cancel(requestKey);
-        view.showCitizenInformation("Cancellation requested for query " + requestKey);
+    public void shutdown() {
+        if (proxyClient != null) {
+            proxyClient.shutdown();
+        }
     }
 }

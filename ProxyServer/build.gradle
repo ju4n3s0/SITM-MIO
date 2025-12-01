@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.zeroc.gradle.ice-builder.slice' version '1.5.0'
 }
 
 group = 'com.sitm.mio'
@@ -12,33 +13,39 @@ repositories {
 }
 
 dependencies {
-    // WebSocket support
-    implementation 'jakarta.websocket:jakarta.websocket-api:2.1.0'
-    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.15'
-    
-    // JWT for authentication
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    
-    // JSON processing
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    
-    // HTTP server (Jetty)
-    implementation 'org.eclipse.jetty:jetty-server:11.0.15'
-    implementation 'org.eclipse.jetty:jetty-servlet:11.0.15'
+    // ZeroC Ice - RPC framework
+    // Add to both compileOnly and implementation to force it onto compile classpath
+    compileOnly 'com.zeroc:ice:3.7.10'
+    implementation 'com.zeroc:ice:3.7.10'
     
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.7'
     implementation 'ch.qos.logback:logback-classic:1.4.11'
     
-    // Cache (optional - Caffeine)
-    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
-    
     // Testing
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testImplementation 'org.mockito:mockito-core:5.3.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.3.1'
+}
+
+// ICE Slice configuration (following official tutorial pattern)
+slice {
+    java {
+        files = fileTree(dir: '../slice', include: '**/*.ice')
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += file("${buildDir}/generated-src")
+        }
+    }
+}
+
+// Ensure compileJava depends on compileSlice
+tasks.named('compileJava') {
+    dependsOn tasks.named('compileSlice')
 }
 
 application {

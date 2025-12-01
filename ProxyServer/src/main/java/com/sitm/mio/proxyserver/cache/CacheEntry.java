@@ -1,6 +1,6 @@
 package com.sitm.mio.proxyserver.cache;
 
-import com.sitm.mio.proxyserver.dto.CitizenInformation;
+import SITM.CitizenInformation;
 
 /**
  * Cache entry storing citizen information with timestamp.
