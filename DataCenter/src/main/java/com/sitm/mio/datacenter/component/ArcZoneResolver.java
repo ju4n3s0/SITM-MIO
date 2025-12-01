@@ -5,6 +5,7 @@ import java.util.List;
 import com.sitm.mio.datacenter.interfaces.IArcZoneResolver;
 import com.sitm.mio.datacenter.interfaces.IStopRepository;
 import com.sitm.mio.datacenter.model.Stop;
+import com.sitm.mio.datacenter.utils.ZoneUtils;
 
 /**
  * Resolves GPS coordinates to arcs and zones.
@@ -66,17 +67,58 @@ public class ArcZoneResolver implements IArcZoneResolver {
     
     @Override
     public String getZoneId(double latitude, double longitude) {
-        Stop nearest = findNearestStop(latitude, longitude);
-        if (nearest == null) {
-            return null;
-        }
-        return nearest.getLongName();
+        return ZoneUtils.computeZone(latitude, longitude);
     }
     
     @Override
     public Long getArcId(double latitude, double longitude) {
-        // TODO: Get arc ID from coordinates
-        return null;
+        
+        List<Stop> stops = stopRepository.findAll();
+        if (stops == null || stops.size() < 2) {
+            System.out.println("[ArcZoneResolver] Not enough stops to resolve arc.");
+            return null;
+        }
+
+        Stop best = null;
+        Stop secondBest = null;
+        double bestDist = Double.MAX_VALUE;
+        double secondBestDist = Double.MAX_VALUE;
+
+        for (Stop s : stops) {
+            double d = distanceInMeters(latitude, longitude,
+                                        s.getLatitude(), s.getLongitude());
+            if (d < bestDist) {
+                //We put the best to the second
+                secondBest = best;
+                secondBestDist = bestDist;
+    
+                best = s;
+                bestDist = d;
+            } else if (d < secondBestDist && s != best) {
+                secondBest = s;
+                secondBestDist = d;
+            }
+        }
+
+        if (best == null || secondBest == null) {
+            System.out.println("[ArcZoneResolver] Could not find two nearby stops for arc.");
+            return null;
+        }
+
+        long fromId = best.getId();
+        long toId = secondBest.getId();
+    
+        long min = Math.min(fromId, toId);
+        long max = Math.max(fromId, toId);
+
+        //Build the arcId
+        long arcId = min * 1_000_000L + max;
+
+        System.out.println("[ArcZoneResolver] Approx arcId for (" +
+                latitude + ", " + longitude + ") -> arc(" + min + "->" + max +
+                "), arcId=" + arcId);
+    
+        return arcId;
     }
     //This method is to seach the nearest stop
     private Stop findNearestStop(double latitude, double longitude){
@@ -88,8 +130,7 @@ public class ArcZoneResolver implements IArcZoneResolver {
         Stop best = null;
         double bestDistance = Double.MAX_VALUE;
 
-        for (Object obj : rawStops) {
-            Stop stop = (Stop) obj; // hacemos cast porque el repo devuelve Object
+        for (Stop stop : rawStops) {
             double d = distanceInMeters(
                     latitude, longitude,
                     stop.getLatitude(), stop.getLongitude()

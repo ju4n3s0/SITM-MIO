@@ -1,7 +1,8 @@
 package com.sitm.mio.datacenter.component;
 
-import com.sitm.mio.datacenter.interfaces.IOperationControlReceiver;
 import com.sitm.mio.datacenter.interfaces.IDataCenterFacade;
+import com.sitm.mio.datacenter.interfaces.IOperationControlReceiver;
+import com.sitm.mio.datacenter.model.OperatorCredentials;
 
 /**
  * Receives requests from OperationControl module.
@@ -20,18 +21,28 @@ public class OperationControlReceiver implements IOperationControlReceiver {
     
     @Override
     public Object handleAuthRequest(Object credentials) {
-        // TODO: Handle authentication request from OperationControl
         System.out.println("Handling auth request from OperationControl");
+
+        if (!(credentials instanceof OperatorCredentials)) {
+            try {
+                throw new IllegalAccessException("Expected operatorCredentials as auth credentials");
+            } catch (IllegalAccessException ex) {
+                System.out.println(ex.getStackTrace());
+            }
+        }
         return null;
     }
     
     @Override
     public Object handleZoneQuery(String zoneId) {
+        System.out.println("[OperationControlReceiver] Handing zone query for zone");
         return facade.getZoneStatistics(zoneId);
     }
     
     @Override
     public Object handleSystemQuery() {
+        System.out.println("[OperationControlReceiver] Handing system-wide statistics");
+
         return facade.getSystemStatistics();
     }
 }
